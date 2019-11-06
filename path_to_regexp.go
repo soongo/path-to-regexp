@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT style
 // license that can be found in the LICENSE file.
 
-package path_to_regexp
+package pathtoregexp
 
 import (
 	"errors"
@@ -16,7 +16,9 @@ import (
 	"github.com/dlclark/regexp2"
 )
 
-type Key struct {
+// Token is parsed from path. For example, using `/user/:id`, `tokens` will
+// contain `[{name:'id', delimiter:'/', optional:false, repeat:false}]`
+type Token struct {
 	// The name of the token (string for named or number for index)
 	name interface{}
 
@@ -36,6 +38,7 @@ type Key struct {
 	pattern string
 }
 
+// Options contains some optional configs
 type Options struct {
 	// When true the regexp will be case sensitive. (default: false)
 	sensitive bool
@@ -64,10 +67,10 @@ type Options struct {
 	encode func(uri string, token interface{}) string
 }
 
-// Default configs.
+// DefaultDelimiter is the default delimiter of path.
 const DefaultDelimiter = "/"
 
-// The main path matching regexp utility.
+// PathRegexp is the main path matching regexp utility.
 var PathRegexp = regexp2.MustCompile(strings.Join([]string{
 	"(\\\\.)",
 	"(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?",
@@ -75,7 +78,7 @@ var PathRegexp = regexp2.MustCompile(strings.Join([]string{
 
 // Parse a string for the raw tokens.
 func Parse(str string, o *Options) []interface{} {
-	tokens, keyIndex, index, path, pathEscaped := make([]interface{}, 0), 0, 0, "", false
+	tokens, tokenIndex, index, path, pathEscaped := make([]interface{}, 0), 0, 0, "", false
 	if o == nil {
 		o = &Options{}
 	}
@@ -127,10 +130,10 @@ func Parse(str string, o *Options) []interface{} {
 		pattern := orString(capture, group)
 		delimiter := orString(prev, defaultDelimiter)
 
-		var keyName interface{} = name
+		var tokenName interface{} = name
 		if name == "" {
-			keyName = keyIndex
-			keyIndex++
+			tokenName = tokenIndex
+			tokenIndex++
 		}
 		if pattern != "" {
 			pattern = escapeGroup(pattern)
@@ -141,8 +144,8 @@ func Parse(str string, o *Options) []interface{} {
 			}
 			pattern = "[^" + escapeString(d) + "]+?"
 		}
-		tokens = append(tokens, Key{
-			name:      keyName,
+		tokens = append(tokens, Token{
+			name:      tokenName,
 			prefix:    prev,
 			delimiter: delimiter,
 			optional:  optional,
@@ -172,7 +175,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 
 	// Compile all the patterns before compilation.
 	for i, token := range tokens {
-		if token, ok := token.(Key); ok {
+		if token, ok := token.(Token); ok {
 			m, err := regexp2.Compile("^(?:"+token.pattern+")$", flags(o))
 			if err != nil {
 				return nil, err
@@ -199,7 +202,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 				continue
 			}
 
-			if token, ok := token.(Key); ok {
+			if token, ok := token.(Token); ok {
 				if data != nil && reflect.TypeOf(data).Kind() == reflect.Map {
 					data := toMap(data)
 					value := data[token.name]
@@ -331,9 +334,9 @@ func toSlice(data interface{}) []interface{} {
 
 func toMap(data interface{}) map[interface{}]interface{} {
 	v, m := reflect.ValueOf(data), make(map[interface{}]interface{})
-	for _, key := range v.MapKeys() {
-		value := v.MapIndex(key)
-		m[key.Interface()] = value.Interface()
+	for _, k := range v.MapKeys() {
+		value := v.MapIndex(k)
+		m[k.Interface()] = value.Interface()
 	}
 	return m
 }
@@ -372,16 +375,16 @@ func flags(o *Options) regexp2.RegexOptions {
 	return regexp2.IgnoreCase
 }
 
-// Pull out keys from a regexp.
-func regexpToRegexp(path *regexp2.Regexp, keys *[]Key) *regexp2.Regexp {
-	if keys != nil {
+// Pull out tokens from a regexp.
+func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
+	if tokens != nil {
 		r := regexp2.MustCompile("\\((?!\\?)", regexp2.None)
 		m, _ := r.FindStringMatch(path.String())
 		if m != nil && m.GroupCount() > 0 {
-			newKeys := make([]Key, 0, len(*keys)+m.GroupCount())
-			newKeys = append(newKeys, *keys...)
+			newTokens := make([]Token, 0, len(*tokens)+m.GroupCount())
+			newTokens = append(newTokens, *tokens...)
 			for i := 0; i < m.GroupCount(); i++ {
-				newKeys = append(newKeys, Key{
+				newTokens = append(newTokens, Token{
 					name:      i,
 					prefix:    "",
 					delimiter: "",
@@ -390,8 +393,8 @@ func regexpToRegexp(path *regexp2.Regexp, keys *[]Key) *regexp2.Regexp {
 					pattern:   "",
 				})
 			}
-			hdr := (*reflect.SliceHeader)(unsafe.Pointer(keys))
-			*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newKeys))
+			hdr := (*reflect.SliceHeader)(unsafe.Pointer(tokens))
+			*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newTokens))
 		}
 	}
 
@@ -399,11 +402,11 @@ func regexpToRegexp(path *regexp2.Regexp, keys *[]Key) *regexp2.Regexp {
 }
 
 // Transform an array into a regexp.
-func arrayToRegexp(path []interface{}, keys *[]Key, o *Options) (*regexp2.Regexp, error) {
+func arrayToRegexp(path []interface{}, tokens *[]Token, o *Options) (*regexp2.Regexp, error) {
 	var parts []string
 
 	for i := 0; i < len(path); i++ {
-		r, err := PathToRegexp(path[i], keys, o)
+		r, err := PathToRegexp(path[i], tokens, o)
 		if err != nil {
 			return nil, err
 		}
@@ -414,12 +417,12 @@ func arrayToRegexp(path []interface{}, keys *[]Key, o *Options) (*regexp2.Regexp
 }
 
 // Create a path regexp from string input.
-func stringToRegexp(path string, keys *[]Key, o *Options) (*regexp2.Regexp, error) {
-	return tokensToRegExp(Parse(path, o), keys, o)
+func stringToRegexp(path string, tokens *[]Token, o *Options) (*regexp2.Regexp, error) {
+	return tokensToRegExp(Parse(path, o), tokens, o)
 }
 
 // Expose a function for taking tokens and returning a RegExp.
-func tokensToRegExp(tokens []interface{}, keys *[]Key, o *Options) (*regexp2.Regexp, error) {
+func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*regexp2.Regexp, error) {
 	if o == nil {
 		o = &Options{}
 	}
@@ -456,25 +459,25 @@ func tokensToRegExp(tokens []interface{}, keys *[]Key, o *Options) (*regexp2.Reg
 		route = "^"
 	}
 
-	var newKeys []Key
-	if keys != nil {
-		newKeys = make([]Key, 0, len(*keys)+len(tokens))
-		newKeys = append(newKeys, *keys...)
+	var newTokens []Token
+	if tokens != nil {
+		newTokens = make([]Token, 0, len(*tokens)+len(rawTokens))
+		newTokens = append(newTokens, *tokens...)
 	}
 
 	// Iterate over the tokens and create our regexp string.
-	for _, token := range tokens {
+	for _, token := range rawTokens {
 		if str, ok := token.(string); ok {
 			route += escapeString(str)
-		} else if token, ok := token.(Key); ok {
+		} else if token, ok := token.(Token); ok {
 			capture := token.pattern
 			if token.repeat {
 				capture = "(?:" + token.pattern + ")(?:" + escapeString(token.delimiter) +
 					"(?:" + token.pattern + "))*"
 			}
 
-			if keys != nil {
-				newKeys = append(newKeys, token)
+			if tokens != nil {
+				newTokens = append(newTokens, token)
 			}
 
 			if token.optional {
@@ -489,9 +492,9 @@ func tokensToRegExp(tokens []interface{}, keys *[]Key, o *Options) (*regexp2.Reg
 		}
 	}
 
-	if keys != nil {
-		hdr := (*reflect.SliceHeader)(unsafe.Pointer(keys))
-		*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newKeys))
+	if tokens != nil {
+		hdr := (*reflect.SliceHeader)(unsafe.Pointer(tokens))
+		*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newTokens))
 	}
 
 	if end {
@@ -506,10 +509,10 @@ func tokensToRegExp(tokens []interface{}, keys *[]Key, o *Options) (*regexp2.Reg
 		route += s
 	} else {
 		isEndDelimited := false
-		if len(tokens) == 0 {
+		if len(rawTokens) == 0 {
 			isEndDelimited = true
 		} else {
-			endToken := tokens[len(tokens)-1]
+			endToken := rawTokens[len(rawTokens)-1]
 			if endToken == nil {
 				isEndDelimited = true
 			} else if str, ok := endToken.(string); ok {
@@ -528,23 +531,21 @@ func tokensToRegExp(tokens []interface{}, keys *[]Key, o *Options) (*regexp2.Reg
 	return regexp2.Compile(route, flags(o))
 }
 
-// Normalize the given path string, returning a regular expression.
-// An empty array can be passed in for the keys, which will hold the
-// placeholder key descriptions. For example, using `/user/:id`, `keys` will
-// contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
-func PathToRegexp(path interface{}, keys *[]Key, options *Options) (*regexp2.Regexp, error) {
+// PathToRegexp normalizes the given path string, returning a regular expression.
+// An empty array can be passed in for the tokens, which will hold the
+// placeholder token descriptions. For example, using `/user/:id`, `tokens` will
+// contain `[{name: 'id', delimiter: '/', optional: false, repeat: false}]`.
+func PathToRegexp(path interface{}, tokens *[]Token, options *Options) (*regexp2.Regexp, error) {
 	switch path := path.(type) {
 	case *regexp2.Regexp:
-		return regexpToRegexp(path, keys), nil
-	case []interface{}:
-		return arrayToRegexp(path, keys, options)
+		return regexpToRegexp(path, tokens), nil
 	case string:
-		return stringToRegexp(path, keys, options)
+		return stringToRegexp(path, tokens, options)
 	}
 
 	switch reflect.TypeOf(path).Kind() {
 	case reflect.Slice, reflect.Array:
-		return arrayToRegexp(toSlice(path), keys, options)
+		return arrayToRegexp(toSlice(path), tokens, options)
 	}
 
 	return nil, errors.New(`path should be string, array or slice of strings, 

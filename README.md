@@ -15,14 +15,14 @@ Thanks to [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
 ```go
 import pathToRegexp "github/soongo/path-to-regexp"
 
-// pathToRegexp.PathToRegexp(path, keys, options) // keys and options can be nil
+// pathToRegexp.PathToRegexp(path, tokens, options) // tokens and options can be nil
 // pathToRegexp.Parse(path, options) // options can be nil
 // pathToRegexp.Compile(path, options) // options can be nil
 ```
 
 - **path** A string, array or slice of strings, or a regular expression with type *github.com/dlclark/regexp2.Regexp.
-- **keys** An array to populate with keys found in the path.
-  - key
+- **tokens** An array to populate with tokens found in the path.
+  - token
     - **name** The name of the token (`string` for named or `number` for index)
     - **prefix** The prefix character for the segment (e.g. `/`)
     - **delimiter** The delimiter for the segment (same as prefix or default delimiter)
@@ -39,17 +39,17 @@ import pathToRegexp "github/soongo/path-to-regexp"
   - **whitelist** List of characters to consider delimiters when parsing. (default: `nil`, any character)
 
 ```go
-var keys []pathToRegexp.Key
-regexp, err := pathToRegexp.PathToRegexp("/foo/:bar", &keys, nil)
+var tokens []pathToRegexp.Token
+regexp, err := pathToRegexp.PathToRegexp("/foo/:bar", &tokens, nil)
 // regexp: ^\/foo\/([^\/]+?)(?:\/)?$
-// keys: [{name:"bar", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"}}]
+// tokens: [{name:"bar", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"}}]
 ```
 
 **Please note:** The `Regexp` returned by `path-to-regexp` is intended for ordered data (e.g. pathnames, hostnames). It can not handle arbitrarily ordered data (e.g. query strings, URL fragments, JSON, etc).
 
 ### Parameters
 
-The path argument is used to define parameters and populate the list of keys.
+The path argument is used to define parameters and populate the list of tokens.
 
 #### Named Parameters
 
@@ -57,7 +57,7 @@ Named parameters are defined by prefixing a colon to the parameter name (`:foo`)
 
 ```go
 regexp, err := pathToRegexp.PathToRegexp("/:foo/:bar", nil, nil)
-// keys: [
+// tokens: [
 //   {name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"},
 //   {name:"bar", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"}
 // ]
@@ -80,7 +80,7 @@ Parameters can be suffixed with a question mark (`?`) to make the parameter opti
 
 ```go
 regexp, err := pathToRegexp.PathToRegexp("/:foo/:bar?", nil, nil)
-// keys: [
+// tokens: [
 //   {name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"},
 //   {name:"bar", prefix:"/", delimiter:"/", optional:true, repeat:false, pattern:"[^\\/]+?"}
 // ]
@@ -108,7 +108,7 @@ Parameters can be suffixed with an asterisk (`*`) to denote a zero or more param
 
 ```go
 regexp, err := pathToRegexp.PathToRegexp("/:foo*", nil, nil)
-// keys: [{name:"foo", prefix:"/", delimiter:"/", optional:true, repeat:true, pattern:"[^\\/]+?"}]
+// tokens: [{name:"foo", prefix:"/", delimiter:"/", optional:true, repeat:true, pattern:"[^\\/]+?"}]
 
 match, err := regexp.FindStringMatch("/")
 for _, g := range match.Groups() {
@@ -131,7 +131,7 @@ Parameters can be suffixed with a plus sign (`+`) to denote a one or more parame
 
 ```go
 regexp, err := pathToRegexp.PathToRegexp("/:foo+", nil, nil)
-// keys: [{name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:true, pattern:"[^\\/]+?"}]
+// tokens: [{name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:true, pattern:"[^\\/]+?"}]
 
 match, err := regexp.FindStringMatch("/")
 fmt.Println(match)
@@ -151,7 +151,7 @@ It is possible to write an unnamed parameter that only consists of a matching gr
 
 ```go
 regexp, err := pathToRegexp.PathToRegexp("/:foo/(.*)", nil, nil)
-// keys: [
+// tokens: [
 //   {name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"},
 //   {name:0, prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:".*"}
 // ]
@@ -170,7 +170,7 @@ All parameters can have a custom regexp, which overrides the default match (`[^/
 
 ```go
 regexpNumbers, err := pathToRegexp.PathToRegexp("/icon-:foo(\\d+).png", nil, nil)
-// keys: {name:"foo", prefix:"-", delimiter:"-", optional:false, repeat:false, pattern:"\\d+"}
+// tokens: {name:"foo", prefix:"-", delimiter:"-", optional:false, repeat:false, pattern:"\\d+"}
 
 match, err := regexpNumbers.FindStringMatch("/icon-123.png")
 for _, g := range match.Groups() {
@@ -183,7 +183,7 @@ fmt.Println(match)
 //=> nil
 
 regexpWord, err := pathToRegexp.PathToRegexp("/(user|u)", nil, nil)
-// keys: {name:0, prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"user|u"}
+// tokens: {name:0, prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"user|u"}
 
 match, err = regexpWord.FindStringMatch("/u")
 for _, g := range match.Groups() {
@@ -200,7 +200,7 @@ fmt.Println(match)
 
 ### Parse
 
-The parse function is exposed via `pathToRegexp.Parse`. This will return a slice of strings and keys.
+The parse function is exposed via `pathToRegexp.Parse`. This will return a slice of strings and tokens.
 
 ```go
 tokens := pathToRegexp.Parse("/route/:foo/(.*)", nil)
@@ -209,10 +209,10 @@ fmt.Printf("%#v\n", tokens[0])
 //=> "/route"
 
 fmt.Printf("%#v\n", tokens[1])
-//=> pathToRegexp.Key{name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"}
+//=> pathToRegexp.Token{name:"foo", prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:"[^\\/]+?"}
 
 fmt.Printf("%#v\n", tokens[2])
-//=> pathToRegexp.Key{name:0, prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:".*"}
+//=> pathToRegexp.Token{name:0, prefix:"/", delimiter:"/", optional:false, repeat:false, pattern:".*"}
 ```
 
 **Note:** This method only works with strings.

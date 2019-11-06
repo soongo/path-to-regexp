@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT style
 // license that can be found in the LICENSE file.
 
-package path_to_regexp
+package pathtoregexp
 
 import (
 	"fmt"
@@ -187,7 +187,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -216,8 +216,8 @@ var tests = []a{
 				"/test",
 				&Options{
 					encode: func(uri string, token interface{}) string {
-						if key, ok := token.(Key); ok {
-							return fmt.Sprintf("%v", key.name)
+						if token, ok := token.(Token); ok {
+							return fmt.Sprintf("%v", token.name)
 						}
 						return ""
 					},
@@ -232,7 +232,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -316,7 +316,7 @@ var tests = []a{
 			start: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -345,8 +345,8 @@ var tests = []a{
 				"/test",
 				&Options{
 					encode: func(uri string, token interface{}) string {
-						if key, ok := token.(Key); ok {
-							return fmt.Sprintf("%v", key.name)
+						if token, ok := token.(Token); ok {
+							return fmt.Sprintf("%v", token.name)
 						}
 						return ""
 					},
@@ -361,7 +361,7 @@ var tests = []a{
 			start: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -462,7 +462,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -487,7 +487,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -570,7 +570,7 @@ var tests = []a{
 			end:   &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -595,7 +595,7 @@ var tests = []a{
 			end:   &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -655,7 +655,7 @@ var tests = []a{
 		"/:test",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -685,7 +685,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -708,7 +708,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -732,7 +732,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -757,7 +757,7 @@ var tests = []a{
 		"/:test?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -783,7 +783,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -807,7 +807,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -832,7 +832,7 @@ var tests = []a{
 		"/:test?/bar",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -855,7 +855,7 @@ var tests = []a{
 		"/:test?-bar",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -879,7 +879,7 @@ var tests = []a{
 		"/:test*-bar",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -907,7 +907,7 @@ var tests = []a{
 		"/:test+",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -932,7 +932,7 @@ var tests = []a{
 		"/:test(\\d+)+",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -956,7 +956,7 @@ var tests = []a{
 		nil,
 		a{
 			"/route",
-			Key{
+			Token{
 				name:      "ext",
 				prefix:    ".",
 				delimiter: ".",
@@ -982,7 +982,7 @@ var tests = []a{
 		nil,
 		a{
 			"/route",
-			Key{
+			Token{
 				name:      "ext",
 				prefix:    ".",
 				delimiter: ".",
@@ -1010,7 +1010,7 @@ var tests = []a{
 		"/:test*",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1036,7 +1036,7 @@ var tests = []a{
 		nil,
 		a{
 			"/route",
-			Key{
+			Token{
 				name:      "ext",
 				prefix:    ".",
 				delimiter: ".",
@@ -1067,7 +1067,7 @@ var tests = []a{
 		"/:test(\\d+)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1093,7 +1093,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1115,7 +1115,7 @@ var tests = []a{
 		"/:test(.*)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1139,7 +1139,7 @@ var tests = []a{
 		"/:route([a-z]+)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "route",
 				prefix:    "/",
 				delimiter: "/",
@@ -1164,7 +1164,7 @@ var tests = []a{
 		"/:route(this|that)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "route",
 				prefix:    "/",
 				delimiter: "/",
@@ -1189,7 +1189,7 @@ var tests = []a{
 		"/:path(abc|xyz)*",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "path",
 				prefix:    "/",
 				delimiter: "/",
@@ -1237,7 +1237,7 @@ var tests = []a{
 		":test",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "",
 				delimiter: "/",
@@ -1264,7 +1264,7 @@ var tests = []a{
 			strict: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "",
 				delimiter: "/",
@@ -1287,7 +1287,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "",
 				delimiter: "/",
@@ -1310,7 +1310,7 @@ var tests = []a{
 		":test?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "",
 				delimiter: "/",
@@ -1334,7 +1334,7 @@ var tests = []a{
 		":test+",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "",
 				delimiter: "/",
@@ -1377,7 +1377,7 @@ var tests = []a{
 		"/:test.json",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1407,7 +1407,7 @@ var tests = []a{
 		nil,
 		a{
 			"/test",
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1432,7 +1432,7 @@ var tests = []a{
 		nil,
 		a{
 			"/test",
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1440,7 +1440,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\.\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1463,7 +1463,7 @@ var tests = []a{
 		nil,
 		a{
 			"/test",
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1489,7 +1489,7 @@ var tests = []a{
 		},
 		a{
 			"/test",
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1511,7 +1511,7 @@ var tests = []a{
 		nil,
 		a{
 			"/test",
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1538,7 +1538,7 @@ var tests = []a{
 		"/:test.:format",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1546,7 +1546,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1569,7 +1569,7 @@ var tests = []a{
 		"/:test.:format?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1577,7 +1577,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1603,7 +1603,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1611,7 +1611,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1639,7 +1639,7 @@ var tests = []a{
 		},
 		a{
 			"/test",
-			Key{
+			Token{
 				name:      "format",
 				prefix:    ".",
 				delimiter: ".",
@@ -1668,7 +1668,7 @@ var tests = []a{
 		"/(\\d+)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "/",
 				delimiter: "/",
@@ -1693,7 +1693,7 @@ var tests = []a{
 			end: &falseValue,
 		},
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "/",
 				delimiter: "/",
@@ -1716,7 +1716,7 @@ var tests = []a{
 		"/(\\d+)?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "/",
 				delimiter: "/",
@@ -1738,7 +1738,7 @@ var tests = []a{
 		"/(.*)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "/",
 				delimiter: "/",
@@ -1762,7 +1762,7 @@ var tests = []a{
 		nil,
 		a{
 			"/route(\\",
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "/",
@@ -1781,7 +1781,7 @@ var tests = []a{
 		"/(login)?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "/",
 				delimiter: "/",
@@ -1813,7 +1813,7 @@ var tests = []a{
 		regexp2.MustCompile("(.*)", regexp2.None),
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "",
@@ -1831,7 +1831,7 @@ var tests = []a{
 		regexp2.MustCompile("\\/(\\d+)", regexp2.None),
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "",
@@ -1854,7 +1854,7 @@ var tests = []a{
 		a{"/test", regexp2.MustCompile("\\/(\\d+)", regexp2.None)},
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "",
@@ -1875,7 +1875,7 @@ var tests = []a{
 		},
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1883,7 +1883,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "\\d+",
 			},
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "",
@@ -1909,7 +1909,7 @@ var tests = []a{
 		},
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1917,7 +1917,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -1939,7 +1939,7 @@ var tests = []a{
 		},
 		nil,
 		a{
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "",
@@ -1947,7 +1947,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "",
 			},
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "",
@@ -2011,7 +2011,7 @@ var tests = []a{
 		nil,
 		a{
 			"/test/",
-			Key{
+			Token{
 				name:      "uid",
 				prefix:    "",
 				delimiter: "/",
@@ -2019,7 +2019,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "u\\d+",
 			},
-			Key{
+			Token{
 				name:      "cid",
 				prefix:    "",
 				delimiter: "/",
@@ -2049,7 +2049,7 @@ var tests = []a{
 		nil,
 		a{
 			"/",
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "/",
@@ -2058,7 +2058,7 @@ var tests = []a{
 				pattern:   "apple-",
 			},
 			"icon",
-			Key{
+			Token{
 				name:      "res",
 				prefix:    "-",
 				delimiter: "-",
@@ -2082,7 +2082,7 @@ var tests = []a{
 		"/:foo/:bar",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2090,7 +2090,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "bar",
 				prefix:    "/",
 				delimiter: "/",
@@ -2110,7 +2110,7 @@ var tests = []a{
 		"/:foo(test\\)/bar",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2127,7 +2127,7 @@ var tests = []a{
 		"/:remote([\\w-.]+)/:user([\\w-]+)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "remote",
 				prefix:    "/",
 				delimiter: "/",
@@ -2135,7 +2135,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[\\w-.]+",
 			},
-			Key{
+			Token{
 				name:      "user",
 				prefix:    "/",
 				delimiter: "/",
@@ -2158,7 +2158,7 @@ var tests = []a{
 		"/:foo\\?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2179,7 +2179,7 @@ var tests = []a{
 		"/:foo+baz",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2205,7 +2205,7 @@ var tests = []a{
 		nil,
 		a{
 			"/",
-			Key{
+			Token{
 				name:      "pre",
 				prefix:    "",
 				delimiter: "/",
@@ -2228,7 +2228,7 @@ var tests = []a{
 		"/:foo\\(:bar?\\)",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2237,7 +2237,7 @@ var tests = []a{
 				pattern:   "[^\\/]+?",
 			},
 			"(",
-			Key{
+			Token{
 				name:      "bar",
 				prefix:    "",
 				delimiter: "/",
@@ -2260,7 +2260,7 @@ var tests = []a{
 		"/:postType(video|audio|text)(\\+.+)?",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "postType",
 				prefix:    "/",
 				delimiter: "/",
@@ -2268,7 +2268,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "video|audio|text",
 			},
-			Key{
+			Token{
 				name:      0,
 				prefix:    "",
 				delimiter: "/",
@@ -2291,7 +2291,7 @@ var tests = []a{
 		"/:foo?/:bar?-ext",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2299,7 +2299,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "bar",
 				prefix:    "/",
 				delimiter: "/",
@@ -2327,7 +2327,7 @@ var tests = []a{
 		"/:required/:optional?-ext",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "required",
 				prefix:    "/",
 				delimiter: "/",
@@ -2335,7 +2335,7 @@ var tests = []a{
 				repeat:    false,
 				pattern:   "[^\\/]+?",
 			},
-			Key{
+			Token{
 				name:      "optional",
 				prefix:    "/",
 				delimiter: "/",
@@ -2363,7 +2363,7 @@ var tests = []a{
 		"/:foo",
 		nil,
 		a{
-			Key{
+			Token{
 				name:      "foo",
 				prefix:    "/",
 				delimiter: "/",
@@ -2416,7 +2416,7 @@ var tests = []a{
 			delimiter: ".",
 		},
 		a{
-			Key{
+			Token{
 				name:      "domain",
 				prefix:    "",
 				delimiter: ".",
@@ -2442,7 +2442,7 @@ var tests = []a{
 		},
 		a{
 			"mail",
-			Key{
+			Token{
 				name:      "domain",
 				prefix:    ".",
 				delimiter: ".",
@@ -2468,7 +2468,7 @@ var tests = []a{
 		},
 		a{
 			"example",
-			Key{
+			Token{
 				name:      "ext",
 				prefix:    ".",
 				delimiter: ".",
@@ -2552,7 +2552,7 @@ var tests = []a{
 			delimiter: "$",
 		},
 		a{
-			Key{
+			Token{
 				delimiter: "$",
 				name:      "foo",
 				optional:  false,
@@ -2560,7 +2560,7 @@ var tests = []a{
 				prefix:    "$",
 				repeat:    false,
 			},
-			Key{
+			Token{
 				delimiter: "$",
 				name:      "bar",
 				optional:  true,
@@ -2584,7 +2584,7 @@ var tests = []a{
 			delimiter: " ",
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "",
 				delimiter: " ",
@@ -2611,7 +2611,7 @@ var tests = []a{
 		&Options{},
 		a{
 			"name",
-			Key{
+			Token{
 				delimiter: "/",
 				name:      "attr1",
 				optional:  true,
@@ -2619,7 +2619,7 @@ var tests = []a{
 				prefix:    "/",
 				repeat:    false,
 			},
-			Key{
+			Token{
 				delimiter: "-",
 				name:      "attr2",
 				optional:  true,
@@ -2627,7 +2627,7 @@ var tests = []a{
 				prefix:    "-",
 				repeat:    false,
 			},
-			Key{
+			Token{
 				delimiter: "-",
 				name:      "attr3",
 				optional:  true,
@@ -2657,7 +2657,7 @@ var tests = []a{
 		},
 		a{
 			"name",
-			Key{
+			Token{
 				delimiter: "/",
 				name:      "attr1",
 				optional:  true,
@@ -2666,7 +2666,7 @@ var tests = []a{
 				repeat:    false,
 			},
 			"-",
-			Key{
+			Token{
 				delimiter: "/",
 				name:      "attr2",
 				optional:  true,
@@ -2699,7 +2699,7 @@ var tests = []a{
 			sensitive: true,
 		},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -2721,7 +2721,7 @@ var tests = []a{
 		"/:test(abc)",
 		&Options{},
 		a{
-			Key{
+			Token{
 				name:      "test",
 				prefix:    "/",
 				delimiter: "/",
@@ -2744,7 +2744,7 @@ var tests = []a{
 func TestPathToRegexp(t *testing.T) {
 	testPath := "/user/:id"
 
-	testParam := Key{
+	testParam := Token{
 		name:      "id",
 		prefix:    "/",
 		delimiter: "/",
@@ -2759,7 +2759,7 @@ func TestPathToRegexp(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			_, err = PathToRegexp("/test", &[]Key{}, nil)
+			_, err = PathToRegexp("/test", &[]Token{}, nil)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -2772,7 +2772,7 @@ func TestPathToRegexp(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			_, err = PathToRegexp(regexp2.MustCompile("^\\/test", regexp2.None), &[]Key{}, nil)
+			_, err = PathToRegexp(regexp2.MustCompile("^\\/test", regexp2.None), &[]Token{}, nil)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -2785,7 +2785,7 @@ func TestPathToRegexp(t *testing.T) {
 			if err != nil {
 				t.Error(err.Error())
 			}
-			_, err = PathToRegexp([]string{"/a", "/b"}, &[]Key{}, nil)
+			_, err = PathToRegexp([]string{"/a", "/b"}, &[]Token{}, nil)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -2795,23 +2795,23 @@ func TestPathToRegexp(t *testing.T) {
 			}
 		})
 
-		t.Run("should accept an array of keys as the second argument", func(t *testing.T) {
-			keys := &[]Key{}
-			r, err := PathToRegexp(testPath, keys, &Options{end: &falseValue})
+		t.Run("should accept an array of tokens as the second argument", func(t *testing.T) {
+			tokens := &[]Token{}
+			r, err := PathToRegexp(testPath, tokens, &Options{end: &falseValue})
 			if err != nil {
 				t.Error(err.Error())
 				return
 			}
 			var want interface{}
-			want = &[]Key{testParam}
+			want = &[]Token{testParam}
 
-			if !reflect.DeepEqual(keys, want) {
-				t.Errorf("got %v want %v", keys, want)
+			if !reflect.DeepEqual(tokens, want) {
+				t.Errorf("got %v want %v", tokens, want)
 			}
 
 			want = []string{"/user/123", "123"}
 			if !reflect.DeepEqual(exec(r, "/user/123/show"), want) {
-				t.Errorf("got %v want %v", keys, want)
+				t.Errorf("got %v want %v", tokens, want)
 			}
 		})
 	})
@@ -2846,15 +2846,15 @@ func TestPathToRegexp(t *testing.T) {
 
 	t.Run("rules", func(t *testing.T) {
 		for _, test := range tests {
-			path, opts, tokens := test[0], test[1], test[2].(a)
+			path, opts, rawTokens := test[0], test[1], test[2].(a)
 			matchCases, compileCases := test[3].(a), test[4].(a)
 			t.Run(inspect(path), func(t *testing.T) {
-				keys := &[]Key{}
+				tokens := &[]Token{}
 				var o *Options
 				if opts != nil {
 					o = opts.(*Options)
 				}
-				r, err := PathToRegexp(path, keys, o)
+				r, err := PathToRegexp(path, tokens, o)
 				if err != nil {
 					t.Error(err.Error())
 					return
@@ -2862,8 +2862,8 @@ func TestPathToRegexp(t *testing.T) {
 				if path, ok := path.(string); ok {
 					t.Run("should parse", func(t *testing.T) {
 						result := a(Parse(path, o))
-						if !reflect.DeepEqual(result, tokens) {
-							t.Errorf("got %v want %v", result, tokens)
+						if !reflect.DeepEqual(result, rawTokens) {
+							t.Errorf("got %v want %v", result, rawTokens)
 						}
 					})
 					t.Run("compile", func(t *testing.T) {
@@ -2899,15 +2899,15 @@ func TestPathToRegexp(t *testing.T) {
 						}
 					})
 				} else {
-					t.Run("should parse keys", func(t *testing.T) {
-						tTokens := make([]interface{}, 0, len(tokens))
-						for _, token := range tokens {
+					t.Run("should parse tokens", func(t *testing.T) {
+						tTokens := make([]interface{}, 0, len(rawTokens))
+						for _, token := range rawTokens {
 							if _, ok := token.(string); !ok {
 								tTokens = append(tTokens, token)
 							}
 						}
-						if !keysAndTokensDeepEqual(*keys, tTokens) {
-							t.Errorf("got %v want %v", *keys, tTokens)
+						if !tokensDeepEqual(*tokens, tTokens) {
+							t.Errorf("got %v want %v", *tokens, tTokens)
 						}
 					})
 				}
@@ -3015,6 +3015,13 @@ func TestPathToRegexp(t *testing.T) {
 			toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}}, nil)
 		})
 	})
+
+	t.Run("path should be string, or strings, or a regular expression", func(t *testing.T) {
+		_, err := PathToRegexp(123, nil, nil)
+		if err == nil {
+			t.Errorf("should got non nil error")
+		}
+	})
 }
 
 func exec(r *regexp2.Regexp, str string) []string {
@@ -3051,21 +3058,21 @@ func deepEqual(p1 []string, p2 a) bool {
 	return true
 }
 
-func keysAndTokensDeepEqual(keys []Key, tokens []interface{}) bool {
-	if len(keys) != len(tokens) {
+func tokensDeepEqual(t1 []Token, t2 []interface{}) bool {
+	if len(t1) != len(t2) {
 		return false
 	}
 
-	if len(keys) == 0 && len(tokens) == 0 {
+	if len(t1) == 0 && len(t2) == 0 {
 		return true
 	}
 
-	if keys == nil || tokens == nil {
+	if t1 == nil || t2 == nil {
 		return false
 	}
 
-	for i, v := range keys {
-		if !reflect.DeepEqual(v, tokens[i]) {
+	for i, v := range t1 {
+		if !reflect.DeepEqual(v, t2[i]) {
 			return false
 		}
 	}
