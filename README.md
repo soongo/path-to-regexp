@@ -1,5 +1,11 @@
 # Path-to-RegExp
 
+[![Build Status](https://travis-ci.org/soongo/path-to-regexp.svg)](https://travis-ci.org/soongo/path-to-regexp)
+[![codecov](https://codecov.io/gh/soongo/path-to-regexp/branch/master/graph/badge.svg)](https://codecov.io/gh/soongo/path-to-regexp)
+[![Go Report Card](https://goreportcard.com/badge/github.com/soongo/path-to-regexp)](https://goreportcard.com/report/github.com/soongo/path-to-regexp)
+[![GoDoc](https://godoc.org/github.com/soongo/path-to-regexp?status.svg)](https://godoc.org/github.com/soongo/path-to-regexp)
+[![License](https://img.shields.io/badge/MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 > Turn a path string such as `/user/:name` into a regular expression.
 
 Thanks to [path-to-regexp](https://github.com/pillarjs/path-to-regexp).

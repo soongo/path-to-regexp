@@ -13,6 +13,8 @@ _test
 *.exe
 *.test
 *.prof
-
+*.out
 *.swp
 
+vendor/*
+!vendor/vendor.json
