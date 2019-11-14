@@ -13,7 +13,7 @@ Thanks to [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
 ## Usage
 
 ```go
-import pathToRegexp "github/soongo/path-to-regexp"
+import pathToRegexp "github.com/soongo/path-to-regexp"
 
 // pathToRegexp.PathToRegexp(path, tokens, options) // tokens and options can be nil
 // pathToRegexp.Parse(path, options) // options can be nil

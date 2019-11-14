@@ -1,4 +1,4 @@
-module github/soongo/path-to-regexp
+module github.com/soongo/path-to-regexp
 
 go 1.13
 
