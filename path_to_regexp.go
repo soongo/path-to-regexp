@@ -67,14 +67,18 @@ type Options struct {
 	encode func(uri string, token interface{}) string
 }
 
-// DefaultDelimiter is the default delimiter of path.
-const DefaultDelimiter = "/"
+// defaultDelimiter is the default delimiter of path.
+const defaultDelimiter = "/"
 
-// PathRegexp is the main path matching regexp utility.
-var PathRegexp = regexp2.MustCompile(strings.Join([]string{
+// pathRegexp is the main path matching regexp utility.
+var pathRegexp = regexp2.MustCompile(strings.Join([]string{
 	"(\\\\.)",
 	"(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?",
 }, "|"), regexp2.None)
+
+var escapeRegexp = regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])", regexp2.None)
+var escapeGroupRegexp = regexp2.MustCompile("([=!:$/()])", regexp2.None)
+var tokenRegexp = regexp2.MustCompile("\\((?!\\?)", regexp2.None)
 
 // Parse a string for the raw tokens.
 func Parse(str string, o *Options) []interface{} {
@@ -82,11 +86,11 @@ func Parse(str string, o *Options) []interface{} {
 	if o == nil {
 		o = &Options{}
 	}
-	defaultDelimiter := orString(o.delimiter, DefaultDelimiter)
+	defaultDelimiter := orString(o.delimiter, defaultDelimiter)
 	whitelist := o.whitelist
 
-	for matcher, _ := PathRegexp.FindStringMatch(str); matcher != nil; matcher,
-		_ = PathRegexp.FindNextMatch(matcher) {
+	for matcher, _ := pathRegexp.FindStringMatch(str); matcher != nil; matcher,
+		_ = pathRegexp.FindNextMatch(matcher) {
 		groups := matcher.Groups()
 		m := groups[0].String()
 		escaped := groups[1].String()
@@ -165,6 +169,16 @@ func Parse(str string, o *Options) []interface{} {
 // Compile a string to a template function for the path.
 func Compile(str string, o *Options) (func(interface{}, *Options) string, error) {
 	return tokensToFunction(Parse(str, o), o)
+}
+
+// MustCompile is like Compile but panics if the expression cannot be compiled.
+// It simplifies safe initialization of global variables.
+func MustCompile(str string, o *Options) func(interface{}, *Options) string {
+	f, err := tokensToFunction(Parse(str, o), o)
+	if err != nil {
+		panic(`pathtoregexp: Compile(` + quote(str) + `): ` + err.Error())
+	}
+	return f
 }
 
 // Expose a method for transforming tokens into the path function.
@@ -349,8 +363,7 @@ func encodeURIComponent(str string, token interface{}) string {
 
 // Escape a regular expression string.
 func escapeString(str string) string {
-	str, err := regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])",
-		regexp2.None).Replace(str, "\\$1", -1, -1)
+	str, err := escapeRegexp.Replace(str, "\\$1", -1, -1)
 	if err != nil {
 		panic(err)
 	}
@@ -359,12 +372,18 @@ func escapeString(str string) string {
 
 // Escape the capturing group by escaping special characters and meaning.
 func escapeGroup(group string) string {
-	group, err := regexp2.MustCompile("([=!:$/()])", regexp2.None).Replace(group,
-		"\\$1", -1, -1)
+	group, err := escapeGroupRegexp.Replace(group, "\\$1", -1, -1)
 	if err != nil {
 		panic(err)
 	}
 	return group
+}
+
+func quote(s string) string {
+	if strconv.CanBackquote(s) {
+		return "`" + s + "`"
+	}
+	return strconv.Quote(s)
 }
 
 // Get the flags for a regexp from the options.
@@ -375,11 +394,21 @@ func flags(o *Options) regexp2.RegexOptions {
 	return regexp2.IgnoreCase
 }
 
+// Must is a helper that wraps a call to a function returning (*regexp2.Regexp, error)
+// and panics if the error is non-nil. It is intended for use in variable initializations
+// such as
+//	var r = pathtoregexp.Must(pathtoregexp.PathToRegexp("/", nil, nil))
+func Must(r *regexp2.Regexp, err error) *regexp2.Regexp {
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 // Pull out tokens from a regexp.
 func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 	if tokens != nil {
-		r := regexp2.MustCompile("\\((?!\\?)", regexp2.None)
-		m, _ := r.FindStringMatch(path.String())
+		m, _ := tokenRegexp.FindStringMatch(path.String())
 		if m != nil && m.GroupCount() > 0 {
 			newTokens := make([]Token, 0, len(*tokens)+m.GroupCount())
 			newTokens = append(newTokens, *tokens...)
@@ -446,7 +475,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 		}
 	}
 
-	delimiter := orString(o.delimiter, DefaultDelimiter)
+	delimiter := orString(o.delimiter, defaultDelimiter)
 	arr := make([]string, len(ends)+1)
 	for i, v := range ends {
 		v = escapeString(v)
