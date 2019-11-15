@@ -17,54 +17,54 @@ import (
 )
 
 // Token is parsed from path. For example, using `/user/:id`, `tokens` will
-// contain `[{name:'id', delimiter:'/', optional:false, repeat:false}]`
+// contain `[{Name:'id', Delimiter:'/', Optional:false, Repeat:false}]`
 type Token struct {
 	// The name of the token (string for named or number for index)
-	name interface{}
+	Name interface{}
 
 	// The prefix character for the segment (e.g. /)
-	prefix string
+	Prefix string
 
 	// The delimiter for the segment (same as prefix or default delimiter)
-	delimiter string
+	Delimiter string
 
 	// Indicates the token is optional (boolean)
-	optional bool
+	Optional bool
 
 	// Indicates the token is repeated (boolean)
-	repeat bool
+	Repeat bool
 
 	// The RegExp used to match this token (string)
-	pattern string
+	Pattern string
 }
 
 // Options contains some optional configs
 type Options struct {
 	// When true the regexp will be case sensitive. (default: false)
-	sensitive bool
+	Sensitive bool
 
 	// When true the regexp allows an optional trailing delimiter to match. (default: false)
-	strict bool
+	Strict bool
 
 	// When true the regexp will match to the end of the string. (default: true)
-	end *bool
+	End *bool
 
 	// When true the regexp will match from the beginning of the string. (default: true)
-	start *bool
+	Start *bool
 
-	validate *bool
+	Validate *bool
 
 	// The default delimiter for segments. (default: '/')
-	delimiter string
+	Delimiter string
 
 	// Optional character, or list of characters, to treat as "end" characters.
-	endsWith interface{}
+	EndsWith interface{}
 
 	// List of characters to consider delimiters when parsing. (default: nil, any character)
-	whitelist []string
+	Whitelist []string
 
 	// how to encode uri
-	encode func(uri string, token interface{}) string
+	Encode func(uri string, token interface{}) string
 }
 
 // defaultDelimiter is the default delimiter of path.
@@ -86,8 +86,8 @@ func Parse(str string, o *Options) []interface{} {
 	if o == nil {
 		o = &Options{}
 	}
-	defaultDelimiter := orString(o.delimiter, defaultDelimiter)
-	whitelist := o.whitelist
+	defaultDelimiter := orString(o.Delimiter, defaultDelimiter)
+	whitelist := o.Whitelist
 
 	for matcher, _ := pathRegexp.FindStringMatch(str); matcher != nil; matcher,
 		_ = pathRegexp.FindNextMatch(matcher) {
@@ -149,12 +149,12 @@ func Parse(str string, o *Options) []interface{} {
 			pattern = "[^" + escapeString(d) + "]+?"
 		}
 		tokens = append(tokens, Token{
-			name:      tokenName,
-			prefix:    prev,
-			delimiter: delimiter,
-			optional:  optional,
-			repeat:    repeat,
-			pattern:   pattern,
+			Name:      tokenName,
+			Prefix:    prev,
+			Delimiter: delimiter,
+			Optional:  optional,
+			Repeat:    repeat,
+			Pattern:   pattern,
 		})
 	}
 
@@ -190,7 +190,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 	// Compile all the patterns before compilation.
 	for i, token := range tokens {
 		if token, ok := token.(Token); ok {
-			m, err := regexp2.Compile("^(?:"+token.pattern+")$", flags(o))
+			m, err := regexp2.Compile("^(?:"+token.Pattern+")$", flags(o))
 			if err != nil {
 				return nil, err
 			}
@@ -202,11 +202,11 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 		t := true
 		path, validate, encode := "", &t, encodeURIComponent
 		if o != nil {
-			if o.encode != nil {
-				encode = o.encode
+			if o.Encode != nil {
+				encode = o.Encode
 			}
-			if o.validate != nil {
-				validate = o.validate
+			if o.Validate != nil {
+				validate = o.Validate
 			}
 		}
 
@@ -219,9 +219,9 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 			if token, ok := token.(Token); ok {
 				if data != nil && reflect.TypeOf(data).Kind() == reflect.Map {
 					data := toMap(data)
-					value := data[token.name]
+					value := data[token.Name]
 					if value == nil {
-						if intValue, ok := token.name.(int); ok {
+						if intValue, ok := token.Name.(int); ok {
 							value = data[strconv.Itoa(intValue)]
 						}
 					}
@@ -231,16 +231,16 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 					if value != nil {
 						if k := reflect.TypeOf(value).Kind(); k == reflect.Slice || k == reflect.Array {
 							value := toSlice(value)
-							if !token.repeat {
+							if !token.Repeat {
 								panic(fmt.Sprintf("Expected \"%v\" to not repeat, but got array",
-									token.name))
+									token.Name))
 							}
 
 							if len(value) == 0 {
-								if token.optional {
+								if token.Optional {
 									continue
 								}
-								panic(fmt.Sprintf("Expected \"%v\" to not be empty", token.name))
+								panic(fmt.Sprintf("Expected \"%v\" to not be empty", token.Name))
 							}
 
 							for j, v := range value {
@@ -249,14 +249,14 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 								if *validate {
 									if ok, err := matches[i].MatchString(segment); err != nil || !ok {
 										panic(fmt.Sprintf("Expected all \"%v\" to match \"%v\"",
-											token.name, token.pattern))
+											token.Name, token.Pattern))
 									}
 								}
 
 								if j == 0 {
-									path += token.prefix
+									path += token.Prefix
 								} else {
-									path += token.delimiter
+									path += token.Delimiter
 								}
 								path += segment
 							}
@@ -282,24 +282,24 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 						if *validate {
 							if ok, err := matches[i].MatchString(segment); err != nil || !ok {
 								panic(fmt.Sprintf("Expected \"%v\" to match \"%v\", but got \"%v\"",
-									token.name, token.pattern, segment))
+									token.Name, token.Pattern, segment))
 							}
 						}
 
-						path += token.prefix + segment
+						path += token.Prefix + segment
 						continue
 					}
 				}
 
-				if token.optional {
+				if token.Optional {
 					continue
 				}
 
 				s := "a string"
-				if token.repeat {
+				if token.Repeat {
 					s = "an array"
 				}
-				panic(fmt.Sprintf("Expected \"%v\" to be %v", token.name, s))
+				panic(fmt.Sprintf("Expected \"%v\" to be %v", token.Name, s))
 			}
 		}
 
@@ -388,7 +388,7 @@ func quote(s string) string {
 
 // Get the flags for a regexp from the options.
 func flags(o *Options) regexp2.RegexOptions {
-	if o != nil && o.sensitive {
+	if o != nil && o.Sensitive {
 		return regexp2.None
 	}
 	return regexp2.IgnoreCase
@@ -414,12 +414,12 @@ func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 			newTokens = append(newTokens, *tokens...)
 			for i := 0; i < m.GroupCount(); i++ {
 				newTokens = append(newTokens, Token{
-					name:      i,
-					prefix:    "",
-					delimiter: "",
-					optional:  false,
-					repeat:    false,
-					pattern:   "",
+					Name:      i,
+					Prefix:    "",
+					Delimiter: "",
+					Optional:  false,
+					Repeat:    false,
+					Pattern:   "",
 				})
 			}
 			hdr := (*reflect.SliceHeader)(unsafe.Pointer(tokens))
@@ -456,26 +456,26 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 		o = &Options{}
 	}
 
-	strict, start, end, route := o.strict, true, true, ""
-	if o.start != nil {
-		start = *o.start
+	strict, start, end, route := o.Strict, true, true, ""
+	if o.Start != nil {
+		start = *o.Start
 	}
-	if o.end != nil {
-		end = *o.end
+	if o.End != nil {
+		end = *o.End
 	}
 
 	var ends []string
-	if o.endsWith != nil {
-		if str, ok := o.endsWith.(string); ok {
+	if o.EndsWith != nil {
+		if str, ok := o.EndsWith.(string); ok {
 			ends = []string{str}
-		} else if arr, ok := o.endsWith.([]string); ok {
+		} else if arr, ok := o.EndsWith.([]string); ok {
 			ends = arr
 		} else {
 			return nil, errors.New("endsWith should be string or []string")
 		}
 	}
 
-	delimiter := orString(o.delimiter, defaultDelimiter)
+	delimiter := orString(o.Delimiter, defaultDelimiter)
 	arr := make([]string, len(ends)+1)
 	for i, v := range ends {
 		v = escapeString(v)
@@ -499,24 +499,24 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 		if str, ok := token.(string); ok {
 			route += escapeString(str)
 		} else if token, ok := token.(Token); ok {
-			capture := token.pattern
-			if token.repeat {
-				capture = "(?:" + token.pattern + ")(?:" + escapeString(token.delimiter) +
-					"(?:" + token.pattern + "))*"
+			capture := token.Pattern
+			if token.Repeat {
+				capture = "(?:" + token.Pattern + ")(?:" + escapeString(token.Delimiter) +
+					"(?:" + token.Pattern + "))*"
 			}
 
 			if tokens != nil {
 				newTokens = append(newTokens, token)
 			}
 
-			if token.optional {
-				if token.prefix == "" {
+			if token.Optional {
+				if token.Prefix == "" {
 					route += "(" + capture + ")?"
 				} else {
-					route += "(?:" + escapeString(token.prefix) + "(" + capture + "))?"
+					route += "(?:" + escapeString(token.Prefix) + "(" + capture + "))?"
 				}
 			} else {
-				route += escapeString(token.prefix) + "(" + capture + ")"
+				route += escapeString(token.Prefix) + "(" + capture + ")"
 			}
 		}
 	}
@@ -563,7 +563,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 // PathToRegexp normalizes the given path string, returning a regular expression.
 // An empty array can be passed in for the tokens, which will hold the
 // placeholder token descriptions. For example, using `/user/:id`, `tokens` will
-// contain `[{name: 'id', delimiter: '/', optional: false, repeat: false}]`.
+// contain `[{Name: 'id', Delimiter: '/', Optional: false, Repeat: false}]`.
 func PathToRegexp(path interface{}, tokens *[]Token, options *Options) (*regexp2.Regexp, error) {
 	switch path := path.(type) {
 	case *regexp2.Regexp:
