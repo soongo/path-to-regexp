@@ -224,6 +224,7 @@ fmt.Printf("%#v\n", tokens[2])
 Path-To-RegExp exposes a compile function for transforming a string into a valid path.
 
 ```go
+falseValue := false
 toPath := pathToRegexp.MustCompile("/user/:id", nil)
 
 toPath(map[string]int{"id": 123}, nil) //=> "/user/123"
@@ -231,13 +232,12 @@ toPath(map[string]string{"id": "café"}, nil) //=> "/user/caf%C3%A9"
 toPath(map[string]string{"id": "/"}, nil) //=> "/user/%2F"
 
 toPath(map[string]string{"id": ":/"}, nil) //=> "/user/%3A%2F"
-toPath(map[string]string{"id": ":&"}, &Options{encode: func(value string, token interface{}) string {
-    return value
-}}) //=> panic
-toPath(map[string]string{"id": ":&"}, nil) //=> "/user/%3A%26"
-toPath(map[string]string{"id": ":&"}, &Options{encode: func(value string, token interface{}) string {
-    return value
-}}) //=> /user/:&
+toPath(map[string]string{"id": ":/"}, &Options{
+    Encode: func(value string, token interface{}) string {
+        return value
+    },
+    Validate: &falseValue,
+}) //=> "/user/:/"
 
 toPathRepeated := pathToRegexp.MustCompile("/:segment+", nil)
 
@@ -249,8 +249,7 @@ toPathRegexp := pathToRegexp.MustCompile("/user/:id(\\d+)", nil)
 toPathRegexp(map[string]int{"id": 123}, nil) //=> "/user/123"
 toPathRegexp(map[string]string{"id": "123"}, nil) //=> "/user/123"
 toPathRegexp(map[string]string{"id": "abc"}, nil) //=> panic
-t1 := true
-toPathRegexp(map[string]string{"id": "abc"}, &Options{validate: &t1}) //=> panic
+toPathRegexp(map[string]string{"id": "abc"}, &Options{Validate: &falseValue}) //=> "/user/abc"
 ```
 
 **Note:** The generated function will panic on invalid input. It will do all necessary checks to ensure the generated path is valid. This method only works with strings.

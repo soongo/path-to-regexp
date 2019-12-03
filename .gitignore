@@ -18,3 +18,4 @@ _test
 
 vendor/*
 !vendor/vendor.json
+examples
