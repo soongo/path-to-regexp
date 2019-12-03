@@ -28,8 +28,8 @@ var tests = []a{
 			"/",
 		},
 		a{
-			a{"/", a{"/"}},
-			a{"/route", nil},
+			a{"/", a{"/"}, &MatchResult{Path: "/", Index: 0, Params: m{}}},
+			a{"/route", nil, nil},
 		},
 		a{
 			a{nil, "/"},
@@ -43,10 +43,10 @@ var tests = []a{
 			"/test",
 		},
 		a{
-			a{"/test", a{"/test"}},
-			a{"/route", nil},
-			a{"/test/route", nil},
-			a{"/test/", a{"/test/"}},
+			a{"/test", a{"/test"}, &MatchResult{Path: "/test", Index: 0, Params: m{}}},
+			a{"/route", nil, nil},
+			a{"/test/route", nil, nil},
+			a{"/test/", a{"/test/"}, &MatchResult{Path: "/test/", Index: 0, Params: m{}}},
 		},
 		a{
 			a{nil, "/test"},
@@ -197,7 +197,11 @@ var tests = []a{
 			},
 		},
 		a{
-			a{"/route", a{"/route", "route"}},
+			a{
+				"/route",
+				a{"/route", "route"},
+				&MatchResult{Path: "/route", Index: 0, Params: m{"test": "route"}},
+			},
 		},
 		a{
 			a{m{}, nil},
@@ -767,9 +771,13 @@ var tests = []a{
 			},
 		},
 		a{
-			a{"/route", a{"/route", "route"}},
-			a{"/route/nested", nil},
-			a{"/", a{"/", ""}},
+			a{
+				"/route",
+				a{"/route", "route"},
+				&MatchResult{Path: "/route", Index: 0, Params: m{"test": "route"}},
+			},
+			a{"/route/nested", nil, nil},
+			a{"/", a{"/", ""}, &MatchResult{Path: "/", Index: 0, Params: m{}}},
 			a{"//", nil},
 		},
 		a{
@@ -917,10 +925,22 @@ var tests = []a{
 			},
 		},
 		a{
-			a{"/", nil},
-			a{"/route", a{"/route", "route"}},
-			a{"/some/basic/route", a{"/some/basic/route", "some/basic/route"}},
-			a{"//", nil},
+			a{"/", nil, nil},
+			a{
+				"/route",
+				a{"/route", "route"},
+				&MatchResult{Path: "/route", Index: 0, Params: m{"test": a{"route"}}},
+			},
+			a{
+				"/some/basic/route",
+				a{"/some/basic/route", "some/basic/route"},
+				&MatchResult{
+					Path:   "/some/basic/route",
+					Index:  0,
+					Params: m{"test": a{"some", "basic", "route"}},
+				},
+			},
+			a{"//", nil, nil},
 		},
 		a{
 			a{m{}, nil},
@@ -1020,13 +1040,26 @@ var tests = []a{
 			},
 		},
 		a{
-			a{"/", a{"/", ""}},
-			a{"//", nil},
-			a{"/route", a{"/route", "route"}},
-			a{"/some/basic/route", a{"/some/basic/route", "some/basic/route"}},
+			a{"/", a{"/", ""}, &MatchResult{Path: "/", Index: 0, Params: m{}}},
+			a{"//", nil, nil},
+			a{
+				"/route",
+				a{"/route", "route"},
+				&MatchResult{Path: "/route", Index: 0, Params: m{"test": a{"route"}}},
+			},
+			a{
+				"/some/basic/route",
+				a{"/some/basic/route", "some/basic/route"},
+				&MatchResult{
+					Path:   "/some/basic/route",
+					Index:  0,
+					Params: m{"test": a{"some", "basic", "route"}},
+				},
+			},
 		},
 		a{
 			a{m{}, ""},
+			a{m{"test": a{}}, ""},
 			a{m{"test": "foobar"}, "/foobar"},
 			a{m{"test": a{"foo", "bar"}}, "/foo/bar"},
 		},
@@ -2874,26 +2907,26 @@ func TestPathToRegexp(t *testing.T) {
 						}
 						for _, v := range compileCases {
 							io := v.(a)
-							input, output := io[0], io[1]
+							params, path := io[0], io[1]
 							var o1 *Options
 							if len(io) >= 3 && io[2] != nil {
 								o1 = io[2].(*Options)
 							}
-							if output != nil {
-								t.Run("should compile using "+inspect(input), func(t *testing.T) {
-									result := toPath(input, o1)
-									if !reflect.DeepEqual(result, output) {
-										t.Errorf("got %v want %v", result, output)
+							if path != nil {
+								t.Run("should compile using "+inspect(params), func(t *testing.T) {
+									result := toPath(params, o1)
+									if !reflect.DeepEqual(result, path) {
+										t.Errorf("got %v want %v", result, path)
 									}
 								})
 							} else {
-								t.Run("should not compile using "+inspect(input), func(t *testing.T) {
+								t.Run("should not compile using "+inspect(params), func(t *testing.T) {
 									defer func() {
 										if err := recover(); err == nil {
 											t.Errorf("got %v want panic", err)
 										}
 									}()
-									toPath(input, o1)
+									toPath(params, o1)
 								})
 							}
 						}
@@ -2919,20 +2952,35 @@ func TestPathToRegexp(t *testing.T) {
 				t.Run("match"+name, func(t *testing.T) {
 					for _, v := range matchCases {
 						io := v.(a)
-						input, output := io[0], io[1]
+						pathname, matches := io[0], io[1]
 						message := " not "
 						var o a
-						if output != nil {
+						if matches != nil {
 							message = " "
-							o = output.(a)
+							o = matches.(a)
 						}
-						message = "should" + message + "match " + inspect(input)
+						message = "should" + message + "match " + inspect(pathname)
 						t.Run(message, func(t *testing.T) {
-							result := exec(r, input.(string))
+							result := exec(r, pathname.(string))
 							if !deepEqual(result, o) {
-								t.Errorf("got %v want %v", result, output)
+								t.Errorf("got %v want %v", result, matches)
 							}
 						})
+
+						var params *MatchResult
+						if len(io) >= 3 && io[2] != nil {
+							params = io[2].(*MatchResult)
+						}
+
+						if path, ok := path.(string); ok && params != nil {
+							match := MustMatch(path, nil)
+							t.Run(message+" params", func(t *testing.T) {
+								m := match(pathname.(string), nil)
+								if !params.equals(m) {
+									t.Errorf("got %v want %v", m, params)
+								}
+							})
+						}
 					}
 				})
 			})
@@ -3078,4 +3126,24 @@ func tokensDeepEqual(t1 []Token, t2 []interface{}) bool {
 	}
 
 	return true
+}
+
+func (m *MatchResult) equals(o *MatchResult) bool {
+	result := m.Path == o.Path && m.Index == m.Index
+
+	if result {
+		for k, v := range m.Params {
+			if reflect.TypeOf(v).Kind() == reflect.Slice {
+				arr1 := toSlice(v)
+				arr2 := toSlice(o.Params[k])
+				if !reflect.DeepEqual(arr1, arr2) {
+					return false
+				}
+			} else if !reflect.DeepEqual(v, o.Params[k]) {
+				return false
+			}
+		}
+	}
+
+	return result
 }

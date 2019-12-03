@@ -19,6 +19,8 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
 // pathToRegexp.Parse(path, options) // options can be nil
 // pathToRegexp.Compile(path, options) // options can be nil
 // pathToRegexp.MustCompile(path, options) // like Compile but panics if the error is non-nil
+// pathToRegexp.Match(path, options) // options can be nil
+// pathToRegexp.MustMatch(path, options) // like Match but panics if the error is non-nil
 // pathToRegexp.Must(regexp, err) // wraps a call to a function returning (*regexp2.Regexp, error) and panics if the error is non-nil.
 ```
 
@@ -39,6 +41,8 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
   - **Delimiter** The default delimiter for segments. (default: `'/'`)
   - **EndsWith** Optional character, or list of characters, to treat as "end" characters.
   - **Whitelist** List of characters to consider delimiters when parsing. (default: `nil`, any character)
+  - **Encode** How to encode uri. (default: `pathToRegexp.EncodeURIComponent`)
+  - **Encode** How to decode uri. (default: `pathToRegexp.DecodeURIComponent`)
 
 ```go
 var tokens []pathToRegexp.Token
@@ -200,9 +204,22 @@ fmt.Println(match)
 
 **Tip:** Backslashes need to be escaped with another backslash in Go strings.
 
+### Match
+
+The `match` function will return a function for transforming paths into parameters:
+
+```go
+match := pathToRegexp.MustMatch("/user/:id")
+
+fmt.Printf("%#v\n", match("/user/123"))
+//=> &pathtoregexp.MatchResult{Path:"/user/123", Index:0, Params:map[interface {}]interface {}{"id":"123"}}
+
+match("/invalid") //=> nil
+```
+
 ### Parse
 
-The parse function is exposed via `pathToRegexp.Parse`. This will return a slice of strings and tokens.
+The `Parse` function will return a list of strings and tokens from a path string:
 
 ```go
 tokens := pathToRegexp.Parse("/route/:foo/(.*)", nil)
@@ -221,7 +238,7 @@ fmt.Printf("%#v\n", tokens[2])
 
 ### Compile ("Reverse" Path-To-RegExp)
 
-Path-To-RegExp exposes a compile function for transforming a string into a valid path.
+The `Compile` function will return a function for transforming parameters into a valid path:
 
 ```go
 falseValue := false
