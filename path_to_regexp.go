@@ -65,6 +65,21 @@ type Options struct {
 
 	// how to encode uri
 	Encode func(uri string, token interface{}) string
+
+	// how to decode uri
+	Decode func(str string, token interface{}) string
+}
+
+// MatchResult contains the result of match function
+type MatchResult struct {
+	// matched url path
+	Path string
+
+	// matched start index
+	Index int
+
+	// matched params in url
+	Params map[interface{}]interface{}
 }
 
 // defaultDelimiter is the default delimiter of path.
@@ -174,11 +189,74 @@ func Compile(str string, o *Options) (func(interface{}, *Options) string, error)
 // MustCompile is like Compile but panics if the expression cannot be compiled.
 // It simplifies safe initialization of global variables.
 func MustCompile(str string, o *Options) func(interface{}, *Options) string {
-	f, err := tokensToFunction(Parse(str, o), o)
+	f, err := Compile(str, o)
 	if err != nil {
 		panic(`pathtoregexp: Compile(` + quote(str) + `): ` + err.Error())
 	}
 	return f
+}
+
+// Match creates path match function from `path-to-regexp` spec.
+func Match(path interface{}, o *Options) (func(string, *Options) *MatchResult, error) {
+	var tokens []Token
+	re, err := PathToRegexp(path, &tokens, o)
+	if err != nil {
+		return nil, err
+	}
+
+	return regexpToFunction(re, tokens), nil
+}
+
+// MustMatch is like Match but panics if err occur in match function.
+func MustMatch(path interface{}, o *Options) func(string, *Options) *MatchResult {
+	f, err := Match(path, o)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
+// Create a path match function from `path-to-regexp` output.
+func regexpToFunction(re *regexp2.Regexp, tokens []Token) func(string, *Options) *MatchResult {
+	return func(pathname string, options *Options) *MatchResult {
+		m, err := re.FindStringMatch(pathname)
+		if m == nil || m.GroupCount() == 0 || err != nil {
+			return nil
+		}
+
+		path := m.Groups()[0].String()
+		index := m.Index
+		params := make(map[interface{}]interface{})
+		decode := DecodeURIComponent
+		if options != nil && options.Decode != nil {
+			decode = options.Decode
+		}
+
+		for i := 1; i < m.GroupCount(); i++ {
+			group := m.Groups()[i]
+			if len(group.Captures) == 0 {
+				continue
+			}
+
+			token := tokens[i-1]
+			matchedStr := group.String()
+
+			if token.Repeat {
+				arr := strings.Split(matchedStr, token.Delimiter)
+				length := len(arr)
+				if length > 0 {
+					for i, str := range arr {
+						arr[i] = decode(str, token)
+					}
+					params[token.Name] = arr
+				}
+			} else {
+				params[token.Name] = decode(matchedStr, token)
+			}
+		}
+
+		return &MatchResult{Path: path, Index: index, Params: params}
+	}
 }
 
 // Expose a method for transforming tokens into the path function.
@@ -200,7 +278,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 
 	return func(data interface{}, o *Options) string {
 		t := true
-		path, validate, encode := "", &t, encodeURIComponent
+		path, validate, encode := "", &t, EncodeURIComponent
 		if o != nil {
 			if o.Encode != nil {
 				encode = o.Encode
@@ -355,9 +433,17 @@ func toMap(data interface{}) map[interface{}]interface{} {
 	return m
 }
 
-func encodeURIComponent(str string, token interface{}) string {
+func EncodeURIComponent(str string, token interface{}) string {
 	r := url.QueryEscape(str)
 	r = strings.Replace(r, "+", "%20", -1)
+	return r
+}
+
+func DecodeURIComponent(str string, token interface{}) string {
+	r, err := url.QueryUnescape(str)
+	if err != nil {
+		panic(err)
+	}
 	return r
 }
 
@@ -408,11 +494,16 @@ func Must(r *regexp2.Regexp, err error) *regexp2.Regexp {
 // Pull out tokens from a regexp.
 func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 	if tokens != nil {
-		m, _ := tokenRegexp.FindStringMatch(path.String())
-		if m != nil && m.GroupCount() > 0 {
-			newTokens := make([]Token, 0, len(*tokens)+m.GroupCount())
-			newTokens = append(newTokens, *tokens...)
-			for i := 0; i < m.GroupCount(); i++ {
+		totalGroupCount := 0
+		for m, _ := tokenRegexp.FindStringMatch(path.String()); m != nil; m,
+			_ = tokenRegexp.FindNextMatch(m) {
+			totalGroupCount += m.GroupCount()
+		}
+
+		if totalGroupCount > 0 {
+			newTokens := append(make([]Token, 0), *tokens...)
+
+			for i := 0; i < totalGroupCount; i++ {
 				newTokens = append(newTokens, Token{
 					Name:      i,
 					Prefix:    "",
@@ -422,6 +513,7 @@ func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 					Pattern:   "",
 				})
 			}
+
 			hdr := (*reflect.SliceHeader)(unsafe.Pointer(tokens))
 			*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newTokens))
 		}
