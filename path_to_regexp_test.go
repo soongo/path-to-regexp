@@ -2772,8 +2772,36 @@ var tests = []a{
 			a{m{"test": "ABC"}, "/ABC"},
 		},
 	},
+
+	/**
+	 * Nested parenthesis.
+	 */
+	{
+		"/:foo(\\d+(?:\\.\\d+)?)",
+		&Options{},
+		a{
+			Token{
+				Name:      "foo",
+				Prefix:    "/",
+				Delimiter: "/",
+				Optional:  false,
+				Repeat:    false,
+				Pattern:   "\\d+(?:\\.\\d+)?",
+			},
+		},
+		a{
+			a{"/123", a{"/123", "123"}},
+			a{"/123.123", a{"/123.123", "123.123"}},
+		},
+		a{
+			a{m{"foo": 123}, "/123"},
+			a{m{"foo": 123.123}, "/123.123"},
+			a{m{"foo": "123"}, "/123"},
+		},
+	},
 }
 
+// Dynamically generate the entire test suite.
 func TestPathToRegexp(t *testing.T) {
 	testPath := "/user/:id"
 
@@ -2847,6 +2875,32 @@ func TestPathToRegexp(t *testing.T) {
 				t.Errorf("got %v want %v", tokens, want)
 			}
 		})
+
+		t.Run("should throw on non-capturing pattern group", func(t *testing.T) {
+			defer func() {
+				want := `Path pattern must be a capturing group`
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/:foo(?:\\d+(\\.\\d+)?)", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+
+		t.Run("should throw on nested capturing regexp groups", func(t *testing.T) {
+			defer func() {
+				want := "Capturing groups are not allowed in pattern, use a non-capturing group: (\\d+(?:\\.\\d+)?)"
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/:foo(\\d+(\\.\\d+)?)", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
 	})
 
 	t.Run("tokens", func(t *testing.T) {
@@ -2870,7 +2924,7 @@ func TestPathToRegexp(t *testing.T) {
 				return
 			}
 			want := "/user/123"
-			result := fn(map[interface{}]interface{}{"id": 123}, nil)
+			result := fn(map[interface{}]interface{}{"id": 123})
 			if !reflect.DeepEqual(result, want) {
 				t.Errorf("got %v want %v", result, want)
 			}
@@ -2892,6 +2946,7 @@ func TestPathToRegexp(t *testing.T) {
 					t.Error(err.Error())
 					return
 				}
+				// Parsing and compiling is only supported with string input.
 				if path, ok := path.(string); ok {
 					t.Run("should parse", func(t *testing.T) {
 						result := a(Parse(path, o))
@@ -2900,22 +2955,22 @@ func TestPathToRegexp(t *testing.T) {
 						}
 					})
 					t.Run("compile", func(t *testing.T) {
-						toPath, err := Compile(path, o)
-						if err != nil {
-							t.Error(err.Error())
-							return
-						}
 						for _, v := range compileCases {
 							io := v.(a)
-							params, path := io[0], io[1]
+							params, result := io[0], io[1]
 							var o1 *Options
 							if len(io) >= 3 && io[2] != nil {
 								o1 = io[2].(*Options)
 							}
-							if path != nil {
+							toPath, err := Compile(path, mergeOptions(o, o1))
+							if err != nil {
+								t.Error(err.Error())
+								return
+							}
+							if result != nil {
 								t.Run("should compile using "+inspect(params), func(t *testing.T) {
-									result := toPath(params, o1)
-									if !reflect.DeepEqual(result, path) {
+									r := toPath(params)
+									if !reflect.DeepEqual(r, result) {
 										t.Errorf("got %v want %v", result, path)
 									}
 								})
@@ -2926,7 +2981,7 @@ func TestPathToRegexp(t *testing.T) {
 											t.Errorf("got %v want panic", err)
 										}
 									}()
-									toPath(params, o1)
+									toPath(params)
 								})
 							}
 						}
@@ -2975,7 +3030,7 @@ func TestPathToRegexp(t *testing.T) {
 						if path, ok := path.(string); ok && params != nil {
 							match := MustMatch(path, nil)
 							t.Run(message+" params", func(t *testing.T) {
-								m := match(pathname.(string), nil)
+								m := match(pathname.(string))
 								if !params.equals(m) {
 									t.Errorf("got %v want %v", m, params)
 								}
@@ -3000,7 +3055,7 @@ func TestPathToRegexp(t *testing.T) {
 				t.Error(err.Error())
 				return
 			}
-			toPath(nil, nil)
+			toPath(nil)
 		})
 
 		t.Run("should throw when it does not match the pattern", func(t *testing.T) {
@@ -3015,7 +3070,7 @@ func TestPathToRegexp(t *testing.T) {
 				t.Error(err.Error())
 				return
 			}
-			toPath(map[interface{}]interface{}{"foo": "abc"}, nil)
+			toPath(map[interface{}]interface{}{"foo": "abc"})
 		})
 
 		t.Run("should throw when expecting a repeated value", func(t *testing.T) {
@@ -3030,7 +3085,7 @@ func TestPathToRegexp(t *testing.T) {
 				t.Error(err.Error())
 				return
 			}
-			toPath(map[interface{}]interface{}{"foo": []interface{}{}}, nil)
+			toPath(map[interface{}]interface{}{"foo": []interface{}{}})
 		})
 
 		t.Run("should throw when not expecting a repeated value", func(t *testing.T) {
@@ -3045,7 +3100,7 @@ func TestPathToRegexp(t *testing.T) {
 				t.Error(err.Error())
 				return
 			}
-			toPath(map[interface{}]interface{}{"foo": []interface{}{}}, nil)
+			toPath(map[interface{}]interface{}{"foo": []interface{}{}})
 		})
 
 		t.Run("should throw when repeated value does not match", func(t *testing.T) {
@@ -3060,7 +3115,7 @@ func TestPathToRegexp(t *testing.T) {
 				t.Error(err.Error())
 				return
 			}
-			toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}}, nil)
+			toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}})
 		})
 	})
 
@@ -3146,4 +3201,62 @@ func (m *MatchResult) equals(o *MatchResult) bool {
 	}
 
 	return result
+}
+
+func mergeOptions(o1 *Options, o2 *Options) *Options {
+	if o1 == nil {
+		return o2
+	}
+
+	if o2 == nil {
+		return o1
+	}
+
+	end := o1.End
+	if o2.End != nil {
+		end = o2.End
+	}
+
+	start := o1.Start
+	if o2.Start != nil {
+		start = o2.Start
+	}
+
+	validate := o1.Validate
+	if o2.Validate != nil {
+		validate = o2.Validate
+	}
+
+	endsWith := o1.EndsWith
+	if o2.EndsWith != nil {
+		endsWith = o2.EndsWith
+	}
+
+	whitelist := o1.Whitelist
+	if o2.Whitelist != nil {
+		whitelist = o2.Whitelist
+	}
+
+	encode := o1.Encode
+	if o2.Encode != nil {
+		encode = o2.Encode
+	}
+
+	decode := o1.Decode
+	if o2.Decode != nil {
+		decode = o2.Decode
+	}
+
+	return &Options{
+		Sensitive: o2.Sensitive,
+		Strict:    o2.Strict,
+		End:       end,
+		Start:     start,
+		Validate:  validate,
+		Delimiter: o2.Delimiter,
+		EndsWith:  endsWith,
+		Whitelist: whitelist,
+		Encode:    encode,
+		Decode:    decode,
+	}
 }
