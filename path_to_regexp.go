@@ -85,110 +85,177 @@ type MatchResult struct {
 // defaultDelimiter is the default delimiter of path.
 const defaultDelimiter = "/"
 
-// pathRegexp is the main path matching regexp utility.
-var pathRegexp = regexp2.MustCompile(strings.Join([]string{
-	"(\\\\.)",
-	"(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?",
-}, "|"), regexp2.None)
-
 var escapeRegexp = regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])", regexp2.None)
-var escapeGroupRegexp = regexp2.MustCompile("([=!:$/()])", regexp2.None)
 var tokenRegexp = regexp2.MustCompile("\\((?!\\?)", regexp2.None)
 
 // Parse a string for the raw tokens.
 func Parse(str string, o *Options) []interface{} {
-	tokens, tokenIndex, index, path, pathEscaped := make([]interface{}, 0), 0, 0, "", false
+	tokens, tokenIndex, index, path, isEscaped := make([]interface{}, 0), 0, 0, "", false
 	if o == nil {
 		o = &Options{}
 	}
 	defaultDelimiter := orString(o.Delimiter, defaultDelimiter)
 	whitelist := o.Whitelist
 
-	for matcher, _ := pathRegexp.FindStringMatch(str); matcher != nil; matcher,
-		_ = pathRegexp.FindNextMatch(matcher) {
-		groups := matcher.Groups()
-		m := groups[0].String()
-		escaped := groups[1].String()
-		offset := matcher.Index
-		path += str[index:offset]
-		index = offset + len(m)
+	// use list to deal with unicode in str
+	arr := strings.Split(str, "")
 
-		// Ignore already escaped sequences.
-		if escaped != "" {
-			path += escaped[1:2]
-			pathEscaped = true
+	// Ignore escaped sequences.
+	length := len(arr)
+	for index < length {
+		prefix, name, pattern := "", "", ""
+
+		if arr[index] == "\\" {
+			index++
+			path += arr[index]
+			index++
+			isEscaped = true
 			continue
 		}
 
-		prev, name, capture, group, modifier := "", groups[2].String(),
-			groups[3].String(), groups[4].String(), groups[5].String()
+		if arr[index] == ":" {
+			for index++; index < length; index++ {
+				if len(arr[index]) == 1 {
+					code := arr[index][0]
+					isNumber := code >= 48 && code <= 57 // `0-9`
+					isUpper := code >= 65 && code <= 90  // `A-Z`
+					isLower := code >= 97 && code <= 122 // `a-z`
+					isUnderscore := code == 95           // `_`
+					if isNumber || isUpper || isLower || isUnderscore {
+						name += string(code)
+						continue
+					}
+				}
+				break
+			}
 
-		if !pathEscaped && len(path) > 0 {
-			k := len(path) - 1
-			c := path[k : k+1]
+			// False positive on param name.
+			if name == "" {
+				index--
+			}
+		}
+
+		if index < length && arr[index] == "(" {
+			prev, balanced, invalidGroup := index, 1, false
+			if index+1 < length && arr[index+1] == "?" {
+				panic("Path pattern must be a capturing group")
+			}
+
+			for index++; index < length; index++ {
+				if arr[index] == "\\" {
+					pattern += strings.Join(arr[index:min(index+2, length)], "")
+					index++
+					continue
+				}
+
+				if arr[index] == ")" {
+					balanced--
+					if balanced == 0 {
+						index++
+						break
+					}
+				}
+
+				pattern += string(arr[index])
+
+				if arr[index] == "(" {
+					balanced++
+
+					// Better errors on nested capturing groups.
+					if index+1 >= length || arr[index+1] != "?" {
+						pattern += "?:"
+						invalidGroup = true
+					}
+				}
+			}
+
+			if invalidGroup {
+				panic(fmt.Sprintf("Capturing groups are not allowed in pattern, "+
+					"use a non-capturing group: (%s)", pattern))
+			}
+
+			// False positive.
+			if balanced > 0 {
+				index = prev
+				pattern = ""
+			}
+		}
+
+		// Add regular characters to the path string.
+		if name == "" && pattern == "" {
+			path += string(arr[index])
+			index++
+			isEscaped = false
+			continue
+		}
+
+		// Extract the final character from `path` for the prefix.
+		if len(path) > 0 && !isEscaped {
+			s := string(path[len(path)-1])
 			matches := true
 			if whitelist != nil {
-				matches = indexOf(whitelist, c) > -1
+				matches = stringIndexOf(whitelist, s) > -1
 			}
-
 			if matches {
-				prev = c
-				path = path[0:k]
+				prefix = s
+				path = path[0 : len(path)-1]
 			}
 		}
 
-		// Push the current path onto the tokens.
-		if path != "" {
+		// Push the current path onto the list of tokens.
+		if len(path) > 0 {
 			tokens = append(tokens, path)
 			path = ""
-			pathEscaped = false
 		}
 
-		repeat := modifier == "+" || modifier == "*"
-		optional := modifier == "?" || modifier == "*"
-		pattern := orString(capture, group)
-		delimiter := orString(prev, defaultDelimiter)
+		repeat := index < length && (arr[index] == "+" || arr[index] == "*")
+		optional := index < length && (arr[index] == "?" || arr[index] == "*")
+		delimiter := orString(prefix, defaultDelimiter)
+
+		// Increment `i` past modifier token.
+		if repeat || optional {
+			index++
+		}
 
 		var tokenName interface{} = name
 		if name == "" {
 			tokenName = tokenIndex
 			tokenIndex++
 		}
-		if pattern != "" {
-			pattern = escapeGroup(pattern)
-		} else {
+
+		p := pattern
+		if pattern == "" {
 			d := delimiter + defaultDelimiter
 			if delimiter == defaultDelimiter {
 				d = delimiter
 			}
-			pattern = "[^" + escapeString(d) + "]+?"
+			p = "[^" + escapeString(d) + "]+?"
 		}
 		tokens = append(tokens, Token{
 			Name:      tokenName,
-			Prefix:    prev,
+			Prefix:    prefix,
 			Delimiter: delimiter,
 			Optional:  optional,
 			Repeat:    repeat,
-			Pattern:   pattern,
+			Pattern:   p,
 		})
 	}
 
-	// Push any remaining characters.
-	if path != "" || index < len(str) {
-		tokens = append(tokens, path+str[index:])
+	if len(path) > 0 {
+		tokens = append(tokens, path)
 	}
 
 	return tokens
 }
 
 // Compile a string to a template function for the path.
-func Compile(str string, o *Options) (func(interface{}, *Options) string, error) {
+func Compile(str string, o *Options) (func(interface{}) string, error) {
 	return tokensToFunction(Parse(str, o), o)
 }
 
 // MustCompile is like Compile but panics if the expression cannot be compiled.
 // It simplifies safe initialization of global variables.
-func MustCompile(str string, o *Options) func(interface{}, *Options) string {
+func MustCompile(str string, o *Options) func(interface{}) string {
 	f, err := Compile(str, o)
 	if err != nil {
 		panic(`pathtoregexp: Compile(` + quote(str) + `): ` + err.Error())
@@ -197,7 +264,7 @@ func MustCompile(str string, o *Options) func(interface{}, *Options) string {
 }
 
 // Match creates path match function from `path-to-regexp` spec.
-func Match(path interface{}, o *Options) (func(string, *Options) *MatchResult, error) {
+func Match(path interface{}, o *Options) (func(string) *MatchResult, error) {
 	var tokens []Token
 	re, err := PathToRegexp(path, &tokens, o)
 	if err != nil {
@@ -208,7 +275,7 @@ func Match(path interface{}, o *Options) (func(string, *Options) *MatchResult, e
 }
 
 // MustMatch is like Match but panics if err occur in match function.
-func MustMatch(path interface{}, o *Options) func(string, *Options) *MatchResult {
+func MustMatch(path interface{}, o *Options) func(string) *MatchResult {
 	f, err := Match(path, o)
 	if err != nil {
 		panic(err)
@@ -217,8 +284,10 @@ func MustMatch(path interface{}, o *Options) func(string, *Options) *MatchResult
 }
 
 // Create a path match function from `path-to-regexp` output.
-func regexpToFunction(re *regexp2.Regexp, tokens []Token) func(string, *Options) *MatchResult {
-	return func(pathname string, options *Options) *MatchResult {
+func regexpToFunction(re *regexp2.Regexp, tokens []Token) func(string) *MatchResult {
+	decode := DecodeURIComponent
+
+	return func(pathname string) *MatchResult {
 		m, err := re.FindStringMatch(pathname)
 		if m == nil || m.GroupCount() == 0 || err != nil {
 			return nil
@@ -227,10 +296,6 @@ func regexpToFunction(re *regexp2.Regexp, tokens []Token) func(string, *Options)
 		path := m.Groups()[0].String()
 		index := m.Index
 		params := make(map[interface{}]interface{})
-		decode := DecodeURIComponent
-		if options != nil && options.Decode != nil {
-			decode = options.Decode
-		}
 
 		for i := 1; i < m.GroupCount(); i++ {
 			group := m.Groups()[i]
@@ -261,14 +326,24 @@ func regexpToFunction(re *regexp2.Regexp, tokens []Token) func(string, *Options)
 
 // Expose a method for transforming tokens into the path function.
 func tokensToFunction(tokens []interface{}, o *Options) (
-	func(interface{}, *Options) string, error) {
+	func(interface{}) string, error) {
+	if o == nil {
+		o = &Options{}
+	}
+	reFlags := flags(o)
+	encode, validate := EncodeURIComponent, true
+	if o.Encode != nil {
+		encode = o.Encode
+	}
+	if o.Validate != nil {
+		validate = *o.Validate
+	}
+
 	// Compile all the tokens into regexps.
 	matches := make([]*regexp2.Regexp, len(tokens))
-
-	// Compile all the patterns before compilation.
 	for i, token := range tokens {
 		if token, ok := token.(Token); ok {
-			m, err := regexp2.Compile("^(?:"+token.Pattern+")$", flags(o))
+			m, err := regexp2.Compile("^(?:"+token.Pattern+")$", reFlags)
 			if err != nil {
 				return nil, err
 			}
@@ -276,17 +351,8 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 		}
 	}
 
-	return func(data interface{}, o *Options) string {
-		t := true
-		path, validate, encode := "", &t, EncodeURIComponent
-		if o != nil {
-			if o.Encode != nil {
-				encode = o.Encode
-			}
-			if o.Validate != nil {
-				validate = o.Validate
-			}
-		}
+	return func(data interface{}) string {
+		path := ""
 
 		for i, token := range tokens {
 			if token, ok := token.(string); ok {
@@ -304,8 +370,6 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 						}
 					}
 
-					var segment string
-
 					if value != nil {
 						if k := reflect.TypeOf(value).Kind(); k == reflect.Slice || k == reflect.Array {
 							value := toSlice(value)
@@ -322,9 +386,9 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 							}
 
 							for j, v := range value {
-								segment = encode(fmt.Sprintf("%v", v), token)
+								segment := encode(fmt.Sprintf("%v", v), token)
 
-								if *validate {
+								if validate {
 									if ok, err := matches[i].MatchString(segment); err != nil || !ok {
 										panic(fmt.Sprintf("Expected all \"%v\" to match \"%v\"",
 											token.Name, token.Pattern))
@@ -345,19 +409,19 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 
 					vString, isString := value.(string)
 					vInt, isInt := value.(int)
-					vBool, isBool := value.(bool)
-					if isString || isInt || isBool {
+					vFloat, isFloat := value.(float64)
+					if isString || isInt || isFloat {
 						var v string
 						if isString {
 							v = vString
 						} else if isInt {
 							v = strconv.Itoa(vInt)
-						} else if isBool {
-							v = strconv.FormatBool(vBool)
+						} else if isFloat {
+							v = strconv.FormatFloat(vFloat, 'f', -1, 64)
 						}
-						segment = encode(v, token)
+						segment := encode(v, token)
 
-						if *validate {
+						if validate {
 							if ok, err := matches[i].MatchString(segment); err != nil || !ok {
 								panic(fmt.Sprintf("Expected \"%v\" to match \"%v\", but got \"%v\"",
 									token.Name, token.Pattern, segment))
@@ -383,6 +447,13 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 
 		return path
 	}, nil
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
 }
 
 func orString(str ...string) string {
@@ -411,6 +482,15 @@ func indexOf(in interface{}, elem interface{}) int {
 		}
 	}
 
+	return -1
+}
+
+func stringIndexOf(arr []string, str string) int {
+	for i, v := range arr {
+		if v == str {
+			return i
+		}
+	}
 	return -1
 }
 
@@ -454,15 +534,6 @@ func escapeString(str string) string {
 		panic(err)
 	}
 	return str
-}
-
-// Escape the capturing group by escaping special characters and meaning.
-func escapeGroup(group string) string {
-	group, err := escapeGroupRegexp.Replace(group, "\\$1", -1, -1)
-	if err != nil {
-		panic(err)
-	}
-	return group
 }
 
 func quote(s string) string {
