@@ -8,7 +8,7 @@
 
 > Turn a path string such as `/user/:name` into a regular expression.
 
-Thanks to [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
+Thanks to [path-to-regexp](https://github.com/pillarjs/path-to-regexp) which is the original version written in javascript.
 
 ## Usage
 
@@ -42,7 +42,7 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
   - **EndsWith** Optional character, or list of characters, to treat as "end" characters.
   - **Whitelist** List of characters to consider delimiters when parsing. (default: `nil`, any character)
   - **Encode** How to encode uri. (default: `pathToRegexp.EncodeURIComponent`)
-  - **Encode** How to decode uri. (default: `pathToRegexp.DecodeURIComponent`)
+  - **Decode** How to decode uri. (default: `pathToRegexp.DecodeURIComponent`)
 
 ```go
 var tokens []pathToRegexp.Token
