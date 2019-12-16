@@ -21,7 +21,10 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
 // pathToRegexp.MustCompile(path, options) // like Compile but panics if the error is non-nil
 // pathToRegexp.Match(path, options) // options can be nil
 // pathToRegexp.MustMatch(path, options) // like Match but panics if the error is non-nil
-// pathToRegexp.Must(regexp, err) // wraps a call to a function returning (*regexp2.Regexp, error) and panics if the error is non-nil.
+// pathToRegexp.Must(regexp, err) // wraps a call to a function returning (*regexp2.Regexp, error) and panics if the error is non-nil
+// pathToRegexp.EncodeURI(str) // encodes characters in URI, like javascript's encodeURI
+// pathToRegexp.EncodeURIComponent(str) // encodes characters in URI except `;/?:@&=+$,#`, like javascript's encodeURIComponent
+// pathToRegexp.NormalizePathname(str) // return a normalized string
 ```
 
 - **path** A string, array or slice of strings, or a regular expression with type *github.com/dlclark/regexp2.Regexp.
@@ -215,6 +218,16 @@ fmt.Printf("%#v\n", match("/user/123"))
 //=> &pathtoregexp.MatchResult{Path:"/user/123", Index:0, Params:map[interface {}]interface {}{"id":"123"}}
 
 match("/invalid") //=> nil
+```
+
+### Normalize Pathname
+
+The `NormalizePathname` function will return a normalized string for matching with `PathToRegexp`.
+
+```js
+re := pathToRegexp.Must(pathToRegexp.PathToRegexp("/caf\u00E9", nil, nil))
+input := pathToRegexp.EncodeURI("/cafe\u0301");
+re.MatchString(pathToRegexp.NormalizePathname(input)); //=> true, nil
 ```
 
 ### Parse

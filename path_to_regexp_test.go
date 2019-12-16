@@ -202,6 +202,17 @@ var tests = []a{
 				a{"/route", "route"},
 				&MatchResult{Path: "/route", Index: 0, Params: m{"test": "route"}},
 			},
+			a{
+				"/caf%C3%A9",
+				a{"/caf%C3%A9", "caf%C3%A9"},
+				&MatchResult{Path: "/caf%C3%A9", Index: 0, Params: m{"test": "caf%C3%A9"}},
+			},
+			a{
+				"/caf%C3%A9",
+				a{"/caf%C3%A9", "caf%C3%A9"},
+				&MatchResult{Path: "/caf%C3%A9", Index: 0, Params: m{"test": "café"}},
+				&Options{Decode: DecodeURIComponent},
+			},
 		},
 		a{
 			a{m{}, nil},
@@ -2774,14 +2785,14 @@ var tests = []a{
 	},
 
 	/**
-	 * Nested parenthesis.
+	 * Nested parentheses.
 	 */
 	{
-		"/:foo(\\d+(?:\\.\\d+)?)",
-		&Options{},
+		"/:test(\\d+(?:\\.\\d+)?)",
+		nil,
 		a{
 			Token{
-				Name:      "foo",
+				Name:      "test",
 				Prefix:    "/",
 				Delimiter: "/",
 				Optional:  false,
@@ -2791,12 +2802,40 @@ var tests = []a{
 		},
 		a{
 			a{"/123", a{"/123", "123"}},
+			a{"/abc", nil},
+			a{"/123/abc", nil},
 			a{"/123.123", a{"/123.123", "123.123"}},
+			a{"/123.abc", nil},
 		},
 		a{
-			a{m{"foo": 123}, "/123"},
-			a{m{"foo": 123.123}, "/123.123"},
-			a{m{"foo": "123"}, "/123"},
+			a{m{"test": 123}, "/123"},
+			a{m{"test": 123.123}, "/123.123"},
+			a{m{"test": "abc"}, nil},
+			a{m{"test": "123"}, "/123"},
+			a{m{"test": "123.123"}, "/123.123"},
+			a{m{"test": "123.abc"}, nil},
+		},
+	},
+	{
+		"/:test((?!login)[^/]+)",
+		nil,
+		a{
+			Token{
+				Name:      "test",
+				Prefix:    "/",
+				Delimiter: "/",
+				Optional:  false,
+				Repeat:    false,
+				Pattern:   "(?!login)[^/]+",
+			},
+		},
+		a{
+			a{"/route", a{"/route", "route"}},
+			a{"/login", nil},
+		},
+		a{
+			a{m{"test": "route"}, "/route"},
+			a{m{"test": "login"}, nil},
 		},
 	},
 }
@@ -3027,8 +3066,13 @@ func TestPathToRegexp(t *testing.T) {
 							params = io[2].(*MatchResult)
 						}
 
+						var options *Options
+						if len(io) >= 4 && io[3] != nil {
+							options = io[3].(*Options)
+						}
+
 						if path, ok := path.(string); ok && params != nil {
-							match := MustMatch(path, nil)
+							match := MustMatch(path, options)
 							t.Run(message+" params", func(t *testing.T) {
 								m := match(pathname.(string))
 								if !params.equals(m) {
@@ -3116,6 +3160,24 @@ func TestPathToRegexp(t *testing.T) {
 				return
 			}
 			toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}})
+		})
+	})
+
+	t.Run("normalize pathname", func(t *testing.T) {
+		t.Run("should match normalized pathnames", func(t *testing.T) {
+			re := Must(PathToRegexp("/caf\u00E9", nil, nil))
+			input := EncodeURI("/cafe\u0301")
+
+			result := exec(re, input)
+			if result != nil {
+				t.Errorf("got %v want %v", result, nil)
+			}
+
+			want := []string{"/caf\u00E9"}
+			result = exec(re, NormalizePathname(input))
+			if !reflect.DeepEqual(result, want) {
+				t.Errorf("got %v want %v", result, want)
+			}
 		})
 	})
 
