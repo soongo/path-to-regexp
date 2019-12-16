@@ -11,9 +11,14 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode"
 	"unsafe"
 
+	"golang.org/x/text/runes"
+
 	"github.com/dlclark/regexp2"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // Token is parsed from path. For example, using `/user/:id`, `tokens` will
@@ -88,6 +93,53 @@ const defaultDelimiter = "/"
 var escapeRegexp = regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])", regexp2.None)
 var tokenRegexp = regexp2.MustCompile("\\((?!\\?)", regexp2.None)
 
+func normalize(str string) string {
+	t := transform.Chain(norm.NFC, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	normStr, _, _ := transform.String(t, str)
+	return normStr
+}
+
+// NormalizePathname normalizes a pathname for matching, replaces multiple slashes
+// with a single slash and normalizes unicode characters to "NFC". When using this method,
+// `decode` should be an identity function so you don't decode strings twice.
+func NormalizePathname(pathname string) string {
+	r := regexp2.MustCompile("\\/+", regexp2.None)
+	str, err := r.Replace(DecodeURIComponent(pathname, nil),
+		"/", -1, -1)
+	if err != nil {
+		panic(err)
+	}
+	return normalize(str)
+}
+
+// Balanced bracket helper function.
+func balanced(open string, close string, str string, index int) int {
+	count, i, arr := 0, index, strings.Split(str, "")
+
+	for i < len(arr) {
+		if arr[i] == "\\" {
+			i += 2
+			continue
+		}
+
+		if arr[i] == close {
+			count--
+
+			if count == 0 {
+				return i + 1
+			}
+		}
+
+		if arr[i] == open {
+			count++
+		}
+
+		i++
+	}
+
+	return -1
+}
+
 // Parse a string for the raw tokens.
 func Parse(str string, o *Options) []interface{} {
 	tokens, tokenIndex, index, path, isEscaped := make([]interface{}, 0), 0, 0, "", false
@@ -136,48 +188,26 @@ func Parse(str string, o *Options) []interface{} {
 		}
 
 		if index < length && arr[index] == "(" {
-			prev, balanced, invalidGroup := index, 1, false
-			if index+1 < length && arr[index+1] == "?" {
-				panic("Path pattern must be a capturing group")
-			}
+			end := balanced("(", ")", str, index)
 
-			for index++; index < length; index++ {
-				if arr[index] == "\\" {
-					pattern += strings.Join(arr[index:min(index+2, length)], "")
-					index++
-					continue
+			// False positive on matching brackets.
+			if end > -1 {
+				pattern = strings.Join(arr[index+1:end-1], "")
+				index = end
+				if pattern[0] == '?' {
+					panic("Path pattern must be a capturing group")
 				}
 
-				if arr[index] == ")" {
-					balanced--
-					if balanced == 0 {
-						index++
-						break
+				r := regexp2.MustCompile("\\((?=[^?])", regexp2.None)
+				if ok, _ := r.MatchString(pattern); ok {
+					validPattern, err := r.Replace(pattern, "(?:", -1, -1)
+					if err != nil {
+						panic(err)
 					}
+
+					panic(fmt.Sprintf("Capturing groups are not allowed in pattern, "+
+						"use a non-capturing group: (%s)", validPattern))
 				}
-
-				pattern += string(arr[index])
-
-				if arr[index] == "(" {
-					balanced++
-
-					// Better errors on nested capturing groups.
-					if index+1 >= length || arr[index+1] != "?" {
-						pattern += "?:"
-						invalidGroup = true
-					}
-				}
-			}
-
-			if invalidGroup {
-				panic(fmt.Sprintf("Capturing groups are not allowed in pattern, "+
-					"use a non-capturing group: (%s)", pattern))
-			}
-
-			// False positive.
-			if balanced > 0 {
-				index = prev
-				pattern = ""
 			}
 		}
 
@@ -271,7 +301,7 @@ func Match(path interface{}, o *Options) (func(string) *MatchResult, error) {
 		return nil, err
 	}
 
-	return regexpToFunction(re, tokens), nil
+	return regexpToFunction(re, tokens, o), nil
 }
 
 // MustMatch is like Match but panics if err occur in match function.
@@ -284,8 +314,13 @@ func MustMatch(path interface{}, o *Options) func(string) *MatchResult {
 }
 
 // Create a path match function from `path-to-regexp` output.
-func regexpToFunction(re *regexp2.Regexp, tokens []Token) func(string) *MatchResult {
-	decode := DecodeURIComponent
+func regexpToFunction(re *regexp2.Regexp, tokens []Token, o *Options) func(string) *MatchResult {
+	decode := func(str string, token interface{}) string {
+		return str
+	}
+	if o != nil && o.Decode != nil {
+		decode = o.Decode
+	}
 
 	return func(pathname string) *MatchResult {
 		m, err := re.FindStringMatch(pathname)
@@ -511,6 +546,20 @@ func toMap(data interface{}) map[interface{}]interface{} {
 		m[k.Interface()] = value.Interface()
 	}
 	return m
+}
+
+func EncodeURI(str string) string {
+	excludes := ";/?:@&=+$,#"
+	arr := strings.Split(str, "")
+	result := ""
+	for _, v := range arr {
+		if strings.Contains(excludes, v) {
+			result += v
+		} else {
+			result += EncodeURIComponent(v, nil)
+		}
+	}
+	return result
 }
 
 func EncodeURIComponent(str string, token interface{}) string {
