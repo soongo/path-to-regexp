@@ -10,6 +10,16 @@
 
 Thanks to [path-to-regexp](https://github.com/pillarjs/path-to-regexp) which is the original version written in javascript.
 
+## Installation
+
+To install `Path-to-RegExp` package, you need to install Go and set your Go workspace first.
+
+The first need [Go](https://golang.org/) installed (**version 1.11+ is required**), then you can use the below Go command to install `Path-to-RegExp`.
+
+```sh
+$ go get -u github.com/soongo/path-to-regexp
+```
+
 ## Usage
 
 ```go
