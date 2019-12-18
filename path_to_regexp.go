@@ -93,8 +93,73 @@ const defaultDelimiter = "/"
 var escapeRegexp = regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])", regexp2.None)
 var tokenRegexp = regexp2.MustCompile("\\((?!\\?)", regexp2.None)
 
-func normalize(str string) string {
-	t := transform.Chain(norm.NFC, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+// EncodeURIComponent encodes a text string as a valid component of a Uniform
+// Resource Identifier (URI).
+func EncodeURIComponent(str string) string {
+	r := url.QueryEscape(str)
+	r = strings.Replace(r, "+", "%20", -1)
+	return r
+}
+
+// Gets the unencoded version of an encoded component of a Uniform Resource
+// Identifier (URI).
+func DecodeURIComponent(str string) string {
+	r, err := url.QueryUnescape(str)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+// Encodes a text string as a valid Uniform Resource Identifier (URI)
+func encodeURI(str string) string {
+	excludes := ";/?:@&=+$,#"
+	arr := strings.Split(str, "")
+	result := ""
+	for _, v := range arr {
+		if strings.Contains(excludes, v) {
+			result += v
+		} else {
+			result += EncodeURIComponent(v)
+		}
+	}
+	return result
+}
+
+// Gets the unencoded version of an encoded Uniform Resource Identifier (URI).
+func decodeURI(str string) string {
+	magicWords := "1@X#y!Z" // not a good idea
+	excludes := []string{"%3B", "%2F", "%3F", "%3A", "%40", "%26", "%3D", "%2B", "%24", "%2C", "%23"}
+	r := regexp2.MustCompile(strings.Join(excludes, "|"), regexp2.None)
+
+	str, _ = r.ReplaceFunc(str, func(m regexp2.Match) string {
+		return strings.Replace(m.String(), "%", magicWords, -1)
+	}, -1, -1)
+
+	str = decodeURIComponent(str, nil)
+
+	for i, v := range excludes {
+		excludes[i] = magicWords + strings.TrimPrefix(v, "%")
+	}
+	r = regexp2.MustCompile(strings.Join(excludes, "|"), regexp2.None)
+
+	str, _ = r.ReplaceFunc(str, func(m regexp2.Match) string {
+		return strings.Replace(m.String(), magicWords, "%", -1)
+	}, -1, -1)
+
+	return str
+}
+
+// Returns the String value result of normalizing the string into the normalization form
+// named by form as specified in Unicode Standard Annex #15, Unicode Normalization Forms.
+// param form Applicable values: "NFC", "NFD", "NFKC", or "NFKD", If not specified default
+// is "NFC"
+func normalize(str string, form ...norm.Form) string {
+	f := norm.NFC
+	if len(form) > 0 {
+		f = form[0]
+	}
+	t := transform.Chain(f, runes.Remove(runes.In(unicode.Mn)), f)
 	normStr, _, _ := transform.String(t, str)
 	return normStr
 }
@@ -103,13 +168,13 @@ func normalize(str string) string {
 // with a single slash and normalizes unicode characters to "NFC". When using this method,
 // `decode` should be an identity function so you don't decode strings twice.
 func NormalizePathname(pathname string) string {
+	pathname = decodeURI(pathname)
 	r := regexp2.MustCompile("\\/+", regexp2.None)
-	str, err := r.Replace(DecodeURIComponent(pathname, nil),
-		"/", -1, -1)
+	pathname, err := r.Replace(pathname, "/", -1, -1)
 	if err != nil {
 		panic(err)
 	}
-	return normalize(str)
+	return pathname
 }
 
 // Balanced bracket helper function.
@@ -146,7 +211,7 @@ func Parse(str string, o *Options) []interface{} {
 	if o == nil {
 		o = &Options{}
 	}
-	defaultDelimiter := orString(o.Delimiter, defaultDelimiter)
+	defaultDelimiter := anyString(o.Delimiter, defaultDelimiter)
 	whitelist := o.Whitelist
 
 	// use list to deal with unicode in str
@@ -240,7 +305,7 @@ func Parse(str string, o *Options) []interface{} {
 
 		repeat := index < length && (arr[index] == "+" || arr[index] == "*")
 		optional := index < length && (arr[index] == "?" || arr[index] == "*")
-		delimiter := orString(prefix, defaultDelimiter)
+		delimiter := anyString(prefix, defaultDelimiter)
 
 		// Increment `i` past modifier token.
 		if repeat || optional {
@@ -366,7 +431,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 		o = &Options{}
 	}
 	reFlags := flags(o)
-	encode, validate := EncodeURIComponent, true
+	encode, validate := encodeURIComponent, true
 	if o.Encode != nil {
 		encode = o.Encode
 	}
@@ -484,14 +549,8 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 	}, nil
 }
 
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
-}
-
-func orString(str ...string) string {
+// Returns the first non empty string
+func anyString(str ...string) string {
 	for _, v := range str {
 		if v != "" {
 			return v
@@ -500,26 +559,7 @@ func orString(str ...string) string {
 	return ""
 }
 
-func indexOf(in interface{}, elem interface{}) int {
-	inValue := reflect.ValueOf(in)
-	elemValue := reflect.ValueOf(elem)
-	inType := inValue.Type()
-
-	if inType.Kind() == reflect.String {
-		return strings.Index(inValue.String(), elemValue.String())
-	}
-
-	if inType.Kind() == reflect.Slice {
-		for i := 0; i < inValue.Len(); i++ {
-			if reflect.DeepEqual(inValue.Index(i).Interface(), elem) {
-				return i
-			}
-		}
-	}
-
-	return -1
-}
-
+// Returns the index of str in string slice
 func stringIndexOf(arr []string, str string) int {
 	for i, v := range arr {
 		if v == str {
@@ -529,6 +569,7 @@ func stringIndexOf(arr []string, str string) int {
 	return -1
 }
 
+// Transform data which is reflect.Slice, reflect.Array to slice
 func toSlice(data interface{}) []interface{} {
 	v := reflect.ValueOf(data)
 	length := v.Len()
@@ -539,6 +580,7 @@ func toSlice(data interface{}) []interface{} {
 	return arr
 }
 
+// Transform data which is reflect.Map to map
 func toMap(data interface{}) map[interface{}]interface{} {
 	v, m := reflect.ValueOf(data), make(map[interface{}]interface{})
 	for _, k := range v.MapKeys() {
@@ -548,32 +590,12 @@ func toMap(data interface{}) map[interface{}]interface{} {
 	return m
 }
 
-func EncodeURI(str string) string {
-	excludes := ";/?:@&=+$,#"
-	arr := strings.Split(str, "")
-	result := ""
-	for _, v := range arr {
-		if strings.Contains(excludes, v) {
-			result += v
-		} else {
-			result += EncodeURIComponent(v, nil)
-		}
-	}
-	return result
+func encodeURIComponent(str string, token interface{}) string {
+	return EncodeURIComponent(str)
 }
 
-func EncodeURIComponent(str string, token interface{}) string {
-	r := url.QueryEscape(str)
-	r = strings.Replace(r, "+", "%20", -1)
-	return r
-}
-
-func DecodeURIComponent(str string, token interface{}) string {
-	r, err := url.QueryUnescape(str)
-	if err != nil {
-		panic(err)
-	}
-	return r
+func decodeURIComponent(str string, token interface{}) string {
+	return DecodeURIComponent(str)
 }
 
 // Escape a regular expression string.
@@ -687,7 +709,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 		}
 	}
 
-	delimiter := orString(o.Delimiter, defaultDelimiter)
+	delimiter := anyString(o.Delimiter, defaultDelimiter)
 	arr := make([]string, len(ends)+1)
 	for i, v := range ends {
 		v = escapeString(v)

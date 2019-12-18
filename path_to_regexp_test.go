@@ -211,7 +211,7 @@ var tests = []a{
 				"/caf%C3%A9",
 				a{"/caf%C3%A9", "caf%C3%A9"},
 				&MatchResult{Path: "/caf%C3%A9", Index: 0, Params: m{"test": "café"}},
-				&Options{Decode: DecodeURIComponent},
+				&Options{Decode: decodeURIComponent},
 			},
 		},
 		a{
@@ -3166,7 +3166,7 @@ func TestPathToRegexp(t *testing.T) {
 	t.Run("normalize pathname", func(t *testing.T) {
 		t.Run("should match normalized pathnames", func(t *testing.T) {
 			re := Must(PathToRegexp("/caf\u00E9", nil, nil))
-			input := EncodeURI("/cafe\u0301")
+			input := encodeURI("/cafe\u0301")
 
 			result := exec(re, input)
 			if result != nil {
@@ -3174,9 +3174,25 @@ func TestPathToRegexp(t *testing.T) {
 			}
 
 			want := []string{"/caf\u00E9"}
-			result = exec(re, NormalizePathname(input))
+			result = exec(re, normalize(NormalizePathname(input)))
 			if !reflect.DeepEqual(result, want) {
 				t.Errorf("got %v want %v", result, want)
+			}
+		})
+
+		t.Run("should not normalize encoded slash", func(t *testing.T) {
+			input, want := "/test/route%2F", "/test/route%2F"
+			result := NormalizePathname(input)
+			if result != want {
+				t.Errorf("got %s want %s", result, want)
+			}
+		})
+
+		t.Run("should fix repeated slashes", func(t *testing.T) {
+			input, want := encodeURI("/test///route"), "/test/route"
+			result := NormalizePathname(input)
+			if result != want {
+				t.Errorf("got %s want %s", result, want)
 			}
 		})
 	})
