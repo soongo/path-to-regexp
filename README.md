@@ -32,9 +32,8 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
 // pathToRegexp.Match(path, options) // options can be nil
 // pathToRegexp.MustMatch(path, options) // like Match but panics if the error is non-nil
 // pathToRegexp.Must(regexp, err) // wraps a call to a function returning (*regexp2.Regexp, error) and panics if the error is non-nil
-// pathToRegexp.EncodeURI(str) // encodes characters in URI, like javascript's encodeURI
-// pathToRegexp.EncodeURIComponent(str) // encodes characters in URI except `;/?:@&=+$,#`, like javascript's encodeURIComponent
-// pathToRegexp.NormalizePathname(str) // return a normalized string
+// pathToRegexp.EncodeURI(str) // encodes characters in URI except `;/?:@&=+$,#`, like javascript's encodeURI
+// pathToRegexp.EncodeURIComponent(str) // encodes characters in URI, like javascript's encodeURIComponent
 ```
 
 - **path** A string, array or slice of strings, or a regular expression with type *github.com/dlclark/regexp2.Regexp.
@@ -236,9 +235,12 @@ The `NormalizePathname` function will return a normalized string for matching wi
 
 ```js
 re := pathToRegexp.Must(pathToRegexp.PathToRegexp("/caf\u00E9", nil, nil))
-input := pathToRegexp.EncodeURI("/cafe\u0301");
+input := pathToRegexp.EncodeURI("/caf\u00E9");
+re.MatchString(input) //=> false, nil
 re.MatchString(pathToRegexp.NormalizePathname(input)); //=> true, nil
 ```
+
+**Note:** It may be preferable to implement something in your own library that normalizes the pathname for matching. E.g. [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) automatically URI encodes paths for you, which would result in a consistent match.
 
 ### Parse
 
