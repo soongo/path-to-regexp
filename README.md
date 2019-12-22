@@ -53,8 +53,8 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
   - **Delimiter** The default delimiter for segments. (default: `'/'`)
   - **EndsWith** Optional character, or list of characters, to treat as "end" characters.
   - **Whitelist** List of characters to consider delimiters when parsing. (default: `nil`, any character)
-  - **Encode** How to encode uri. (default: `pathToRegexp.EncodeURIComponent`)
-  - **Decode** How to decode uri. (default: `pathToRegexp.DecodeURIComponent`)
+  - **Encode** How to encode uri. (default: `func (uri string, token interface{}) string { return uri }`)
+  - **Decode** How to decode uri. (default: `func (uri string, token interface{}) string { return uri }`)
 
 ```go
 var tokens []pathToRegexp.Token
@@ -221,26 +221,18 @@ fmt.Println(match)
 The `match` function will return a function for transforming paths into parameters:
 
 ```go
-match := pathToRegexp.MustMatch("/user/:id")
+match := pathToRegexp.MustMatch("/user/:id", &pathToRegexp.Options{Decode: func(str string, token interface{}) string {
+    return pathToRegexp.DecodeURIComponent(str)
+}})
 
-fmt.Printf("%#v\n", match("/user/123"))
+match("/user/123")
 //=> &pathtoregexp.MatchResult{Path:"/user/123", Index:0, Params:map[interface {}]interface {}{"id":"123"}}
 
 match("/invalid") //=> nil
+
+match("/user/caf%C3%A9")
+//=> &pathtoregexp.MatchResult{Path:"/user/caf%C3%A9", Index:0, Params:map[interface {}]interface {}{"id":"café"}}
 ```
-
-### Normalize Pathname
-
-The `NormalizePathname` function will return a normalized string for matching with `PathToRegexp`.
-
-```js
-re := pathToRegexp.Must(pathToRegexp.PathToRegexp("/caf\u00E9", nil, nil))
-input := pathToRegexp.EncodeURI("/caf\u00E9");
-re.MatchString(input) //=> false, nil
-re.MatchString(pathToRegexp.NormalizePathname(input)); //=> true, nil
-```
-
-**Note:** It may be preferable to implement something in your own library that normalizes the pathname for matching. E.g. [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) automatically URI encodes paths for you, which would result in a consistent match.
 
 ### Parse
 
@@ -266,32 +258,35 @@ fmt.Printf("%#v\n", tokens[2])
 The `Compile` function will return a function for transforming parameters into a valid path:
 
 ```go
+toPath := pathToRegexp.MustCompile("/user/:id", &pathToRegexp.Options{Encode: func(str string, token interface{}) string {
+    return pathToRegexp.EncodeURIComponent(str)
+}})
+
+toPath(map[string]int{"id": 123}) //=> "/user/123"
+toPath(map[string]string{"id": "café"}) //=> "/user/caf%C3%A9"
+toPath(map[string]string{"id": "/"}) //=> "/user/%2F"
+
+toPath(map[string]string{"id": ":/"}) //=> "/user/%3A%2F"
+
+// Without `encode`, you need to make sure inputs are encoded correctly.
 falseValue := false
-toPath := pathToRegexp.MustCompile("/user/:id", nil)
-
-toPath(map[string]int{"id": 123}, nil) //=> "/user/123"
-toPath(map[string]string{"id": "café"}, nil) //=> "/user/caf%C3%A9"
-toPath(map[string]string{"id": "/"}, nil) //=> "/user/%2F"
-
-toPath(map[string]string{"id": ":/"}, nil) //=> "/user/%3A%2F"
-toPath(map[string]string{"id": ":/"}, &Options{
-    Encode: func(value string, token interface{}) string {
-        return value
-    },
-    Validate: &falseValue,
-}) //=> "/user/:/"
+toPathRaw := pathToRegexp.MustCompile("/user/:id", &pathToRegexp.Options{Validate: &falseValue})
+toPathRaw(map[string]string{"id": "%3A%2F"}); //=> "/user/%3A%2F"
+toPathRaw(map[string]string{"id": ":/"}); //=> "/user/:/"
 
 toPathRepeated := pathToRegexp.MustCompile("/:segment+", nil)
 
-toPathRepeated(map[string]string{"segment": "foo"}, nil) //=> "/foo"
-toPathRepeated(map[string][]string{"segment": {"a", "b", "c"}}, nil) //=> "/a/b/c"
+toPathRepeated(map[string]string{"segment": "foo"}) //=> "/foo"
+toPathRepeated(map[string][]string{"segment": {"a", "b", "c"}}) //=> "/a/b/c"
 
-toPathRegexp := pathToRegexp.MustCompile("/user/:id(\\d+)", nil)
+toPathRegexp := pathToRegexp.MustCompile("/user/:id(\\d+)", &pathToRegexp.Options{Validate: &falseValue})
 
-toPathRegexp(map[string]int{"id": 123}, nil) //=> "/user/123"
-toPathRegexp(map[string]string{"id": "123"}, nil) //=> "/user/123"
-toPathRegexp(map[string]string{"id": "abc"}, nil) //=> panic
-toPathRegexp(map[string]string{"id": "abc"}, &Options{Validate: &falseValue}) //=> "/user/abc"
+toPathRegexp(map[string]int{"id": 123}) //=> "/user/123"
+toPathRegexp(map[string]string{"id": "123"}) //=> "/user/123"
+toPathRegexp(map[string]string{"id": "abc"}) //=> "/user/abc"
+
+toPathRegexp = pathToRegexp.MustCompile("/user/:id(\\d+)", nil)
+toPathRegexp(map[string]string{"id": "abc"}) //=> panic
 ```
 
 **Note:** The generated function will panic on invalid input. It will do all necessary checks to ensure the generated path is valid. This method only works with strings.
