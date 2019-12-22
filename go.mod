@@ -2,7 +2,4 @@ module github.com/soongo/path-to-regexp
 
 go 1.13
 
-require (
-	github.com/dlclark/regexp2 v1.2.0
-	golang.org/x/text v0.3.2
-)
+require github.com/dlclark/regexp2 v1.2.0

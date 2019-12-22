@@ -11,14 +11,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"unicode"
 	"unsafe"
 
-	"golang.org/x/text/runes"
-
 	"github.com/dlclark/regexp2"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 )
 
 // Token is parsed from path. For example, using `/user/:id`, `tokens` will
@@ -93,6 +88,10 @@ const defaultDelimiter = "/"
 var escapeRegexp = regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])", regexp2.None)
 var tokenRegexp = regexp2.MustCompile("\\((?!\\?)", regexp2.None)
 
+func identity(uri string, token interface{}) string {
+	return uri
+}
+
 // EncodeURIComponent encodes a text string as a valid component of a Uniform
 // Resource Identifier (URI).
 func EncodeURIComponent(str string) string {
@@ -148,33 +147,6 @@ func decodeURI(str string) string {
 	}, -1, -1)
 
 	return str
-}
-
-// Returns the String value result of normalizing the string into the normalization form
-// named by form as specified in Unicode Standard Annex #15, Unicode Normalization Forms.
-// param form Applicable values: "NFC", "NFD", "NFKC", or "NFKD", If not specified default
-// is "NFC"
-func normalize(str string, form ...norm.Form) string {
-	f := norm.NFC
-	if len(form) > 0 {
-		f = form[0]
-	}
-	t := transform.Chain(f, runes.Remove(runes.In(unicode.Mn)), f)
-	normStr, _, _ := transform.String(t, str)
-	return normStr
-}
-
-// NormalizePathname normalizes a pathname for matching, replaces multiple slashes
-// with a single slash and normalizes unicode characters to "NFC". When using this method,
-// `decode` should be an identity function so you don't decode strings twice.
-func NormalizePathname(pathname string) string {
-	pathname = decodeURI(pathname)
-	r := regexp2.MustCompile("\\/+", regexp2.None)
-	pathname, err := r.Replace(pathname, "/", -1, -1)
-	if err != nil {
-		panic(err)
-	}
-	return pathname
 }
 
 // Balanced bracket helper function.
@@ -431,7 +403,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 		o = &Options{}
 	}
 	reFlags := flags(o)
-	encode, validate := encodeURIComponent, true
+	encode, validate := identity, true
 	if o.Encode != nil {
 		encode = o.Encode
 	}
@@ -690,12 +662,15 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 		o = &Options{}
 	}
 
-	strict, start, end, route := o.Strict, true, true, ""
+	strict, start, end, route, encode := o.Strict, true, true, "", identity
 	if o.Start != nil {
 		start = *o.Start
 	}
 	if o.End != nil {
 		end = *o.End
+	}
+	if o.Encode != nil {
+		encode = o.Encode
 	}
 
 	var ends []string
@@ -731,7 +706,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 	// Iterate over the tokens and create our regexp string.
 	for _, token := range rawTokens {
 		if str, ok := token.(string); ok {
-			route += escapeString(str)
+			route += escapeString(encode(str, nil))
 		} else if token, ok := token.(Token); ok {
 			capture := token.Pattern
 			if token.Repeat {

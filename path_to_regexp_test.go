@@ -217,15 +217,7 @@ var tests = []a{
 		a{
 			a{m{}, nil},
 			a{m{"test": "abc"}, "/abc"},
-			a{
-				m{"test": "a+b"},
-				"/a+b",
-				&Options{
-					Encode: func(uri string, token interface{}) string {
-						return uri
-					},
-				},
-			},
+			a{m{"test": "a+b"}, "/a+b"},
 			a{
 				m{"test": "a+b"},
 				"/test",
@@ -238,7 +230,7 @@ var tests = []a{
 					},
 				},
 			},
-			a{m{"test": "a+b"}, "/a%2Bb"},
+			a{m{"test": "a+b"}, "/a%2Bb", &Options{Encode: encodeURIComponent}},
 		},
 	},
 	{
@@ -346,15 +338,7 @@ var tests = []a{
 		a{
 			a{m{}, nil},
 			a{m{"test": "abc"}, "/abc"},
-			a{
-				m{"test": "a+b"},
-				"/a+b",
-				&Options{
-					Encode: func(uri string, token interface{}) string {
-						return uri
-					},
-				},
-			},
+			a{m{"test": "a+b"}, "/a+b"},
 			a{
 				m{"test": "a+b"},
 				"/test",
@@ -367,7 +351,7 @@ var tests = []a{
 					},
 				},
 			},
-			a{m{"test": "a+b"}, "/a%2Bb"},
+			a{m{"test": "a+b"}, "/a%2Bb", &Options{Encode: encodeURIComponent}},
 		},
 	},
 	{
@@ -690,8 +674,16 @@ var tests = []a{
 		},
 		a{
 			a{m{"test": "route"}, "/route"},
-			a{m{"test": "something/else"}, "/something%2Felse"},
-			a{m{"test": "something/else/more"}, "/something%2Felse%2Fmore"},
+			a{
+				m{"test": "something/else"},
+				"/something%2Felse",
+				&Options{Encode: encodeURIComponent},
+			},
+			a{
+				m{"test": "something/else/more"},
+				"/something%2Felse%2Fmore",
+				&Options{Encode: encodeURIComponent},
+			},
 		},
 	},
 	{
@@ -1175,8 +1167,8 @@ var tests = []a{
 		a{
 			a{m{"test": ""}, "/"},
 			a{m{"test": "abc"}, "/abc"},
-			a{m{"test": "abc/123"}, "/abc%2F123"},
-			a{m{"test": "abc/123/456"}, "/abc%2F123%2F456"},
+			a{m{"test": "abc/123"}, "/abc%2F123", &Options{Encode: encodeURIComponent}},
+			a{m{"test": "abc/123/456"}, "/abc%2F123%2F456", &Options{Encode: encodeURIComponent}},
 		},
 	},
 	{
@@ -2240,7 +2232,7 @@ var tests = []a{
 		},
 		a{
 			a{m{"foo": "foo"}, "/foobaz"},
-			a{m{"foo": "foo/bar"}, "/foo%2Fbarbaz"},
+			a{m{"foo": "foo/bar"}, "/foo%2Fbarbaz", &Options{Encode: encodeURIComponent}},
 			a{m{"foo": a{"foo", "bar"}}, "/foo/barbaz"},
 		},
 	},
@@ -2420,7 +2412,8 @@ var tests = []a{
 			a{"/café", a{"/café", "café"}},
 		},
 		a{
-			a{m{"foo": "café"}, "/caf%C3%A9"},
+			a{m{"foo": "café"}, "/café"},
+			a{m{"foo": "café"}, "/caf%C3%A9", &Options{Encode: encodeURIComponent}},
 		},
 	},
 	{
@@ -2431,6 +2424,21 @@ var tests = []a{
 		},
 		a{
 			a{"/café", a{"/café"}},
+		},
+		a{
+			a{nil, "/café"},
+		},
+	},
+	{
+		"/café",
+		&Options{Encode: func(uri string, token interface{}) string {
+			return encodeURI(uri)
+		}},
+		a{
+			"/café",
+		},
+		a{
+			a{"/caf%C3%A9", a{"/caf%C3%A9"}},
 		},
 		a{
 			a{nil, "/café"},
@@ -3160,40 +3168,6 @@ func TestPathToRegexp(t *testing.T) {
 				return
 			}
 			toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}})
-		})
-	})
-
-	t.Run("normalize pathname", func(t *testing.T) {
-		t.Run("should match normalized pathnames", func(t *testing.T) {
-			re := Must(PathToRegexp("/caf\u00E9", nil, nil))
-			input := encodeURI("/cafe\u0301")
-
-			result := exec(re, input)
-			if result != nil {
-				t.Errorf("got %v want %v", result, nil)
-			}
-
-			want := []string{"/caf\u00E9"}
-			result = exec(re, normalize(NormalizePathname(input)))
-			if !reflect.DeepEqual(result, want) {
-				t.Errorf("got %v want %v", result, want)
-			}
-		})
-
-		t.Run("should not normalize encoded slash", func(t *testing.T) {
-			input, want := "/test/route%2F", "/test/route%2F"
-			result := NormalizePathname(input)
-			if result != want {
-				t.Errorf("got %s want %s", result, want)
-			}
-		})
-
-		t.Run("should fix repeated slashes", func(t *testing.T) {
-			input, want := encodeURI("/test///route"), "/test/route"
-			result := NormalizePathname(input)
-			if result != want {
-				t.Errorf("got %s want %s", result, want)
-			}
 		})
 	})
 
