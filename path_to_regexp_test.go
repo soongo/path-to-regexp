@@ -5,6 +5,7 @@
 package pathtoregexp
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -3176,6 +3177,80 @@ func TestPathToRegexp(t *testing.T) {
 		if err == nil {
 			t.Errorf("should got non nil error")
 		}
+	})
+}
+
+func TestMustCompile(t *testing.T) {
+	r := MustCompile("/user/:id(\\d+)", nil)
+	if r == nil {
+		t.Error("got nil want func")
+	}
+}
+
+func TestDecodeURI(t *testing.T) {
+	tests := map[string]string{
+		"%3B%2F%3F%3A%40%26%3D%2B%24%2C%23": "%3B%2F%3F%3A%40%26%3D%2B%24%2C%23",
+		"http%3A%2F%2Fwww.example.com%2Fstring%20with%20%2B%20and%20%3F%20and%20%26%20and%20spaces": "http%3A%2F%2Fwww.example.com%2Fstring with %2B and %3F and %26 and spaces",
+		"https://developer.mozilla.org/ru/docs/JavaScript_%D1%88%D0%B5%D0%BB%D0%BB%D1%8B":           "https://developer.mozilla.org/ru/docs/JavaScript_шеллы",
+	}
+	for k, v := range tests {
+		result := decodeURI(k)
+		if result != v {
+			t.Errorf("got %v want %v", result, v)
+		}
+	}
+
+	t.Run("malformed URI sequence", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err == nil {
+				t.Errorf("got nil want panic")
+			}
+		}()
+		decodeURI("%E0%A4%A")
+	})
+}
+
+func TestAnyString(t *testing.T) {
+	tests := map[string][]string{
+		"foo": {"", "", "foo", ""},
+		"bar": {"bar", "", "foo", ""},
+		"":    {"", "", "", ""},
+	}
+	for k, v := range tests {
+		result := anyString(v...)
+		if result != k {
+			t.Errorf("got %v want %v", result, k)
+		}
+	}
+}
+
+func TestQuote(t *testing.T) {
+	tests := map[string]string{
+		"foo":   "`foo`",
+		"`bar`": "\"`bar`\"",
+	}
+	for k, v := range tests {
+		result := quote(k)
+		if result != v {
+			t.Errorf("got %v want %v", result, v)
+		}
+	}
+}
+
+func TestMust(t *testing.T) {
+	r := regexp2.MustCompile("^\\/([^\\/]+)$", regexp2.None)
+	result := Must(r, nil)
+	if result != r {
+		t.Errorf("got %v want %v", result, r)
+	}
+
+	t.Run("non nil error", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err == nil {
+				t.Errorf("got nil want panic")
+			}
+		}()
+		result = Must(r, errors.New("error"))
 	})
 }
 
