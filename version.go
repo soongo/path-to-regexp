@@ -5,4 +5,4 @@
 package pathtoregexp
 
 // Version is the current path-to-regexp's version.
-const Version = "v1.3.2-dev"
+const Version = "v1.4.0-dev"
