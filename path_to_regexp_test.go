@@ -3180,6 +3180,88 @@ func TestPathToRegexp(t *testing.T) {
 	})
 }
 
+func BenchmarkPathToRegexp(b *testing.B) {
+	b.Run("string", func(b *testing.B) {
+		b.Run("no parameters", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp("/foo", &[]Token{}, nil)
+			}
+		})
+		b.Run("named parameters", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp("/foo/:bar", &[]Token{}, nil)
+			}
+		})
+		b.Run("unnamed parameters", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp("/:foo/(.*)", &[]Token{}, nil)
+			}
+		})
+		b.Run("optional parameters", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp("/:foo/:bar?", &[]Token{}, nil)
+			}
+		})
+	})
+
+	b.Run("regexp", func(b *testing.B) {
+		b.Run("simple", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp(regexp2.MustCompile("^/foo/\\d+", regexp2.None), &[]Token{}, nil)
+			}
+		})
+		b.Run("complex", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp(regexp2.MustCompile("^/foo/\\d+(?:\\.\\d+)?", regexp2.None), &[]Token{}, nil)
+			}
+		})
+	})
+
+	b.Run("array", func(b *testing.B) {
+		b.Run("simple", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp([]string{"/foo", "/foo/bar"}, &[]Token{}, nil)
+			}
+		})
+		b.Run("complex", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				PathToRegexp([]string{"/foo/:bar", "/:foo/:bar?"}, &[]Token{}, nil)
+			}
+		})
+	})
+
+	b.Run("with end false", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			PathToRegexp("/foo/:bar", &[]Token{}, &Options{End: &falseValue})
+		}
+	})
+}
+
+func BenchmarkParse(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Parse("/foo/:bar/(.*)", nil)
+	}
+}
+
+func BenchmarkCompile(b *testing.B) {
+	b.Run("simple", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Compile("/foo/:bar", nil)
+		}
+	})
+	b.Run("complex", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Compile("/foo/:bar(\\d+)", nil)
+		}
+	})
+}
+
+func BenchmarkMatch(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Match("/foo/:bar", nil)
+	}
+}
+
 func TestMustCompile(t *testing.T) {
 	r := MustCompile("/user/:id(\\d+)", nil)
 	if r == nil {
