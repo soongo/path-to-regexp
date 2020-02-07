@@ -68,7 +68,7 @@ regexp := pathToRegexp.Must(pathToRegexp.PathToRegexp("/foo/:bar", &tokens, nil)
 // tokens: [{Name:"bar", Prefix:"/", Suffix:"", Pattern:"[^\\/]+?", Modifier:""}]
 ```
 
-**Please note:** The `Regexp` returned by `path-to-regexp` is intended for ordered data (e.g. pathnames, hostnames). It can not handle arbitrarily ordered data (e.g. query strings, URL fragments, JSON, etc).
+**Please note:** The `Regexp` returned by `path-to-regexp` is intended for ordered data (e.g. pathnames, hostnames). It can not handle arbitrarily ordered data (e.g. query strings, URL fragments, JSON, etc). When using paths that contain query strings, you need to escape the question mark (`?`) to ensure it does not flag the parameter as [optional](#optional).
 
 ### Parameters
 
@@ -187,14 +187,14 @@ regexp := pathToRegexp.Must(pathToRegexp.PathToRegexp("/:foo/:bar?", nil, nil))
 //   {Name:"bar", Prefix:"/", Suffix:"", Pattern:"[^\\/]+?", Modifier:"?"}
 // ]
 
-match, err := regexp.FindStringMatch("/test")
+match, _ := regexp.FindStringMatch("/test")
 for _, g := range match.Groups() {
     fmt.Printf("%q ", g.String())
 }
 fmt.Printf("%d %q\n", match.Index, match)
 //=> "/test" "test" "" 0 "/test"
 
-match, err = regexp.FindStringMatch("/test/route")
+match, _ = regexp.FindStringMatch("/test/route")
 for _, g := range match.Groups() {
     fmt.Printf("%q ", g.String())
 }
@@ -204,6 +204,24 @@ fmt.Printf("%d %q\n", match.Index, match)
 
 **Tip:** The prefix is also optional, escape the prefix `\/` to make it required.
 
+When dealing with query strings, escape the question mark (`?`) so it doesn't mark the parameter as optional. Handling unordered data is outside the scope of this library.
+
+```go
+regexp := pathToRegexp.Must(pathToRegexp.PathToRegexp("/search/:tableName\\?useIndex=true&term=amazing", nil, nil))
+
+match, _ := regexp.FindStringMatch("/search/people?useIndex=true&term=amazing")
+for _, g := range match.Groups() {
+    fmt.Printf("%q ", g.String())
+}
+fmt.Printf("%d %q\n", match.Index, match)
+//=> "/search/people?useIndex=true&term=amazing" "people" 0 "/search/people?useIndex=true&term=amazing"
+
+// This library does not handle query strings in different orders
+match, _ = regexp.FindStringMatch("/search/people?term=amazing&useIndex=true")
+fmt.Println(match)
+//=> <nil>
+```
+
 ##### Zero or more
 
 Parameters can be suffixed with an asterisk (`*`) to denote a zero or more parameter matches.
@@ -212,14 +230,14 @@ Parameters can be suffixed with an asterisk (`*`) to denote a zero or more param
 regexp := pathToRegexp.Must(pathToRegexp.PathToRegexp("/:foo*", nil, nil))
 // tokens: [{Name:"foo", Prefix:"/", Suffix:"", Pattern:"[^\\/]+?", Modifier:"*"}]
 
-match, err := regexp.FindStringMatch("/")
+match, _ := regexp.FindStringMatch("/")
 for _, g := range match.Groups() {
     fmt.Printf("%q ", g.String())
 }
 fmt.Printf("%d %q\n", match.Index, match)
 //=> "/" "" 0 "/"
 
-match, err = regexp.FindStringMatch("/bar/baz")
+match, _ = regexp.FindStringMatch("/bar/baz")
 for _, g := range match.Groups() {
     fmt.Printf("%q ", g.String())
 }
@@ -235,11 +253,11 @@ Parameters can be suffixed with a plus sign (`+`) to denote a one or more parame
 regexp := pathToRegexp.Must(pathToRegexp.PathToRegexp("/:foo+", nil, nil))
 // tokens: [{Name:"foo", Prefix:"/", Suffix:"", Pattern:"[^\\/]+?", Modifier:"+"}]
 
-match, err := regexp.FindStringMatch("/")
+match, _ := regexp.FindStringMatch("/")
 fmt.Println(match)
 //=> nil
 
-match, err = regexp.FindStringMatch("/bar/baz")
+match, _ = regexp.FindStringMatch("/bar/baz")
 for _, g := range match.Groups() {
     fmt.Printf("%q ", g.String())
 }
