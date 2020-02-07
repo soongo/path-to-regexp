@@ -116,7 +116,7 @@ fmt.Println(match)
 //=> <nil>
 
 tokens = make([]pathToRegexp.Token, 0)
-regexpWord := pathToRegexp("/(user|u)", &tokens, nil)
+regexpWord := pathToRegexp.Must(pathToRegexp.PathToRegexp("/(user|u)", &tokens, nil))
 // tokens: [{Name:0, Prefix:"/", Suffix:"", Pattern:"user|u", Modifier:""}]
 
 match, _ = regexpWord.FindStringMatch("/u")
