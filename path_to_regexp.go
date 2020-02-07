@@ -25,17 +25,14 @@ type Token struct {
 	// The prefix character for the segment (e.g. /)
 	Prefix string
 
-	// The delimiter for the segment (same as prefix or default delimiter)
-	Delimiter string
-
-	// Indicates the token is optional (boolean)
-	Optional bool
-
-	// Indicates the token is repeated (boolean)
-	Repeat bool
+	// The suffix string for the segment (e.g. `""`)
+	Suffix string
 
 	// The RegExp used to match this token (string)
 	Pattern string
+
+	// The modifier character used for the segment (e.g. `?`)
+	Modifier string
 }
 
 // Options contains some optional configs
@@ -52,16 +49,17 @@ type Options struct {
 	// When true the regexp will match from the beginning of the string. (default: true)
 	Start *bool
 
+	// When `false` the function can produce an invalid (unmatched) path. (default: `true`)
 	Validate *bool
 
-	// The default delimiter for segments. (default: '/')
+	// Sets the final character for non-ending optimistic matches. (default: `/`)
 	Delimiter string
 
-	// Optional character, or list of characters, to treat as "end" characters.
-	EndsWith interface{}
+	// Optional character to treat as "end" characters.
+	EndsWith string
 
-	// List of characters to consider delimiters when parsing. (default: nil, any character)
-	Whitelist []string
+	// List of characters to automatically consider prefixes when parsing. (default: `./`)
+	Prefixes *string
 
 	// how to encode uri
 	Encode func(uri string, token interface{}) string
@@ -82,8 +80,24 @@ type MatchResult struct {
 	Params map[interface{}]interface{}
 }
 
-// defaultDelimiter is the default delimiter of path.
-const defaultDelimiter = "/"
+type lexTokenMode uint8
+
+const (
+	modeOpen lexTokenMode = iota
+	modeClose
+	modePattern
+	modeName
+	modeChar
+	modeEscapedChar
+	modeModifier
+	modeEnd
+)
+
+type lexToken struct {
+	mode  lexTokenMode
+	index int
+	value string
+}
 
 var escapeRegexp = regexp2.MustCompile("([.+*?=^!:${}()[\\]|/\\\\])", regexp2.None)
 var tokenRegexp = regexp2.MustCompile("\\((?!\\?)", regexp2.None)
@@ -149,181 +163,285 @@ func decodeURI(str string) string {
 	return str
 }
 
-// Balanced bracket helper function.
-func balanced(open string, close string, str string, index int) int {
-	count, i, arr := 0, index, strings.Split(str, "")
-
-	for i < len(arr) {
-		if arr[i] == "\\" {
-			i += 2
-			continue
-		}
-
-		if arr[i] == close {
-			count--
-
-			if count == 0 {
-				return i + 1
-			}
-		}
-
-		if arr[i] == open {
-			count++
-		}
-
-		i++
-	}
-
-	return -1
-}
-
-// Parse a string for the raw tokens.
-func Parse(str string, o *Options) []interface{} {
-	tokens, tokenIndex, index, path, isEscaped := make([]interface{}, 0), 0, 0, "", false
-	if o == nil {
-		o = &Options{}
-	}
-	defaultDelimiter := anyString(o.Delimiter, defaultDelimiter)
-	whitelist := o.Whitelist
+// Tokenize input string.
+func lexer(str string) []lexToken {
+	tokens, i := make([]lexToken, 0), 0
 
 	// use list to deal with unicode in str
 	arr := strings.Split(str, "")
 
-	// Ignore escaped sequences.
 	length := len(arr)
-	for index < length {
-		prefix, name, pattern := "", "", ""
-
-		if arr[index] == "\\" {
-			index++
-			path += arr[index]
-			index++
-			isEscaped = true
+	for i < length {
+		char := arr[i]
+		if char == "*" || char == "+" || char == "?" {
+			tokens = append(tokens, lexToken{mode: modeModifier, index: i, value: arr[i]})
+			i++
 			continue
 		}
 
-		if arr[index] == ":" {
-			for index++; index < length; index++ {
-				if len(arr[index]) == 1 {
-					code := arr[index][0]
+		if char == "\\" {
+			tokens = append(tokens, lexToken{mode: modeEscapedChar, index: i, value: arr[i+1]})
+			i += 2
+			continue
+		}
+
+		if char == "{" {
+			tokens = append(tokens, lexToken{mode: modeOpen, index: i, value: arr[i]})
+			i++
+			continue
+		}
+
+		if char == "}" {
+			tokens = append(tokens, lexToken{mode: modeClose, index: i, value: arr[i]})
+			i++
+			continue
+		}
+
+		if char == ":" {
+			name, j := "", i+1
+
+			for j < length {
+				if len(arr[j]) == 1 {
+					code := arr[j][0]
 					isNumber := code >= 48 && code <= 57 // `0-9`
 					isUpper := code >= 65 && code <= 90  // `A-Z`
 					isLower := code >= 97 && code <= 122 // `a-z`
 					isUnderscore := code == 95           // `_`
 					if isNumber || isUpper || isLower || isUnderscore {
-						name += string(code)
+						name += arr[j]
+						j++
 						continue
 					}
 				}
+
 				break
 			}
 
-			// False positive on param name.
 			if name == "" {
-				index--
+				panic(fmt.Sprintf("Missing parameter name at %d", i))
 			}
-		}
 
-		if index < length && arr[index] == "(" {
-			end := balanced("(", ")", str, index)
-
-			// False positive on matching brackets.
-			if end > -1 {
-				pattern = strings.Join(arr[index+1:end-1], "")
-				index = end
-				if pattern[0] == '?' {
-					panic("Path pattern must be a capturing group")
-				}
-
-				r := regexp2.MustCompile("\\((?=[^?])", regexp2.None)
-				if ok, _ := r.MatchString(pattern); ok {
-					validPattern, err := r.Replace(pattern, "(?:", -1, -1)
-					if err != nil {
-						panic(err)
-					}
-
-					panic(fmt.Sprintf("Capturing groups are not allowed in pattern, "+
-						"use a non-capturing group: (%s)", validPattern))
-				}
-			}
-		}
-
-		// Add regular characters to the path string.
-		if name == "" && pattern == "" {
-			path += string(arr[index])
-			index++
-			isEscaped = false
+			tokens = append(tokens, lexToken{mode: modeName, index: i, value: name})
+			i = j
 			continue
 		}
 
-		// Extract the final character from `path` for the prefix.
-		if len(path) > 0 && !isEscaped {
-			s := string(path[len(path)-1])
-			matches := true
-			if whitelist != nil {
-				matches = stringIndexOf(whitelist, s) > -1
+		if char == "(" {
+			count, pattern, j := 1, "", i+1
+
+			if arr[j] == "?" {
+				panic(fmt.Sprintf("Pattern cannot start with \"?\" at %d", j))
 			}
-			if matches {
-				prefix = s
-				path = path[0 : len(path)-1]
+
+			for j < length {
+				if arr[j] == "\\" {
+					pattern += arr[j] + arr[j+1]
+					j += 2
+					continue
+				}
+
+				if arr[j] == ")" {
+					count--
+					if count == 0 {
+						j++
+						break
+					}
+				} else if arr[j] == "(" {
+					count++
+					if arr[j+1] != "?" {
+						panic(fmt.Sprintf("Capturing groups are not allowed at %d", j))
+					}
+				}
+
+				pattern += arr[j]
+				j++
 			}
-		}
 
-		// Push the current path onto the list of tokens.
-		if len(path) > 0 {
-			tokens = append(tokens, path)
-			path = ""
-		}
-
-		repeat := index < length && (arr[index] == "+" || arr[index] == "*")
-		optional := index < length && (arr[index] == "?" || arr[index] == "*")
-		delimiter := anyString(prefix, defaultDelimiter)
-
-		// Increment `i` past modifier token.
-		if repeat || optional {
-			index++
-		}
-
-		var tokenName interface{} = name
-		if name == "" {
-			tokenName = tokenIndex
-			tokenIndex++
-		}
-
-		p := pattern
-		if pattern == "" {
-			d := delimiter + defaultDelimiter
-			if delimiter == defaultDelimiter {
-				d = delimiter
+			if count != 0 {
+				panic(fmt.Sprintf("Unbalanced pattern at %d", i))
 			}
-			p = "[^" + escapeString(d) + "]+?"
+			if pattern == "" {
+				panic(fmt.Sprintf("Missing pattern at %d", i))
+			}
+
+			tokens = append(tokens, lexToken{mode: modePattern, index: i, value: pattern})
+			i = j
+			continue
 		}
-		tokens = append(tokens, Token{
-			Name:      tokenName,
-			Prefix:    prefix,
-			Delimiter: delimiter,
-			Optional:  optional,
-			Repeat:    repeat,
-			Pattern:   p,
-		})
+
+		tokens = append(tokens, lexToken{mode: modeChar, index: i, value: arr[i]})
+		i++
 	}
 
-	if len(path) > 0 {
-		tokens = append(tokens, path)
-	}
+	tokens = append(tokens, lexToken{mode: modeEnd, index: i, value: ""})
 
 	return tokens
 }
 
+// Parse a string for the raw tokens.
+func Parse(str string, options *Options) []interface{} {
+	if options == nil {
+		options = &Options{}
+	}
+	tokens, prefixes := lexer(str), "./"
+	if options.Prefixes != nil {
+		prefixes = *options.Prefixes
+	}
+	defaultPattern := "[^" + escapeString(anyString(options.Delimiter, "/")) + "]+?"
+	result, key, i, path := make([]interface{}, 0), 0, 0, ""
+
+	tryConsume := func(mode lexTokenMode) *string {
+		if i < len(tokens) && tokens[i].mode == mode {
+			result := tokens[i].value
+			i++
+			return &result
+		}
+		return nil
+	}
+
+	mustConsume := func(mode lexTokenMode) string {
+		value := tryConsume(mode)
+		if value != nil {
+			return *value
+		}
+		nextMode, index := tokens[i].mode, tokens[i].index
+		panic(fmt.Sprintf("Unexpected %d at %d, expected %d", nextMode, index, mode))
+	}
+
+	consumeText := func() string {
+		result, value := "", tryConsume(modeChar)
+		if value == nil || *value == "" {
+			value = tryConsume(modeEscapedChar)
+		}
+		for value != nil && *value != "" {
+			result += *value
+			value = tryConsume(modeChar)
+			if value == nil || *value == "" {
+				value = tryConsume(modeEscapedChar)
+			}
+		}
+		return result
+	}
+
+	for i < len(tokens) {
+		char, name, pattern := tryConsume(modeChar), tryConsume(modeName), tryConsume(modePattern)
+
+		if (name != nil && *name != "") || (pattern != nil && *pattern != "") {
+			prefix := ""
+			if char != nil && *char != "" {
+				prefix = *char
+			}
+
+			if strings.Index(prefixes, prefix) == -1 {
+				path += prefix
+				prefix = ""
+			}
+
+			if path != "" {
+				result = append(result, path)
+				path = ""
+			}
+
+			result = append(result, Token{
+				Name: func() interface{} {
+					if name != nil && *name != "" {
+						return *name
+					}
+					result := key
+					key++
+					return result
+				}(),
+				Prefix: prefix,
+				Suffix: "",
+				Pattern: func() string {
+					if pattern != nil && *pattern != "" {
+						return *pattern
+					}
+					return defaultPattern
+				}(),
+				Modifier: func() string {
+					result := tryConsume(modeModifier)
+					if result != nil && *result != "" {
+						return *result
+					}
+					return ""
+				}(),
+			})
+			continue
+		}
+
+		var value *string
+		if char != nil && *char != "" {
+			value = char
+		} else {
+			value = tryConsume(modeEscapedChar)
+		}
+		if value != nil && *value != "" {
+			path += *value
+			continue
+		}
+
+		if path != "" {
+			result = append(result, path)
+			path = ""
+		}
+
+		open := tryConsume(modeOpen)
+		if open != nil && *open != "" {
+			prefix, name, pattern := consumeText(), tryConsume(modeName), tryConsume(modePattern)
+			suffix := consumeText()
+			mustConsume(modeClose)
+
+			result = append(result, Token{
+				Name: func() interface{} {
+					if name != nil && *name != "" {
+						return *name
+					}
+					if pattern != nil && *pattern != "" {
+						result := key
+						key++
+						return result
+					}
+					return ""
+				}(),
+				Prefix: prefix,
+				Suffix: suffix,
+				Pattern: func() string {
+					if (name != nil && *name != "") && (pattern == nil || *pattern == "") {
+						return defaultPattern
+					}
+					if pattern == nil {
+						return ""
+					}
+					return *pattern
+				}(),
+				Modifier: func() string {
+					result := tryConsume(modeModifier)
+					if result != nil && *result != "" {
+						return *result
+					}
+					return ""
+				}(),
+			})
+
+			continue
+		}
+
+		mustConsume(modeEnd)
+	}
+
+	return result
+}
+
 // Compile a string to a template function for the path.
-func Compile(str string, o *Options) (func(interface{}) string, error) {
-	return tokensToFunction(Parse(str, o), o)
+func Compile(str string, options *Options) (func(interface{}) string, error) {
+	return tokensToFunction(Parse(str, options), options)
 }
 
 // MustCompile is like Compile but panics if the expression cannot be compiled.
 // It simplifies safe initialization of global variables.
-func MustCompile(str string, o *Options) func(interface{}) string {
-	f, err := Compile(str, o)
+func MustCompile(str string, options *Options) func(interface{}) string {
+	f, err := Compile(str, options)
 	if err != nil {
 		panic(`pathtoregexp: Compile(` + quote(str) + `): ` + err.Error())
 	}
@@ -331,19 +449,19 @@ func MustCompile(str string, o *Options) func(interface{}) string {
 }
 
 // Match creates path match function from `path-to-regexp` spec.
-func Match(path interface{}, o *Options) (func(string) *MatchResult, error) {
+func Match(path interface{}, options *Options) (func(string) *MatchResult, error) {
 	var tokens []Token
-	re, err := PathToRegexp(path, &tokens, o)
+	re, err := PathToRegexp(path, &tokens, options)
 	if err != nil {
 		return nil, err
 	}
 
-	return regexpToFunction(re, tokens, o), nil
+	return regexpToFunction(re, tokens, options), nil
 }
 
 // MustMatch is like Match but panics if err occur in match function.
-func MustMatch(path interface{}, o *Options) func(string) *MatchResult {
-	f, err := Match(path, o)
+func MustMatch(path interface{}, options *Options) func(string) *MatchResult {
+	f, err := Match(path, options)
 	if err != nil {
 		panic(err)
 	}
@@ -351,12 +469,12 @@ func MustMatch(path interface{}, o *Options) func(string) *MatchResult {
 }
 
 // Create a path match function from `path-to-regexp` output.
-func regexpToFunction(re *regexp2.Regexp, tokens []Token, o *Options) func(string) *MatchResult {
+func regexpToFunction(re *regexp2.Regexp, tokens []Token, options *Options) func(string) *MatchResult {
 	decode := func(str string, token interface{}) string {
 		return str
 	}
-	if o != nil && o.Decode != nil {
-		decode = o.Decode
+	if options != nil && options.Decode != nil {
+		decode = options.Decode
 	}
 
 	return func(pathname string) *MatchResult {
@@ -378,8 +496,8 @@ func regexpToFunction(re *regexp2.Regexp, tokens []Token, o *Options) func(strin
 			token := tokens[i-1]
 			matchedStr := group.String()
 
-			if token.Repeat {
-				arr := strings.Split(matchedStr, token.Delimiter)
+			if token.Modifier == "*" || token.Modifier == "+" {
+				arr := strings.Split(matchedStr, token.Prefix+token.Suffix)
 				length := len(arr)
 				if length > 0 {
 					for i, str := range arr {
@@ -397,18 +515,18 @@ func regexpToFunction(re *regexp2.Regexp, tokens []Token, o *Options) func(strin
 }
 
 // Expose a method for transforming tokens into the path function.
-func tokensToFunction(tokens []interface{}, o *Options) (
+func tokensToFunction(tokens []interface{}, options *Options) (
 	func(interface{}) string, error) {
-	if o == nil {
-		o = &Options{}
+	if options == nil {
+		options = &Options{}
 	}
-	reFlags := flags(o)
+	reFlags := flags(options)
 	encode, validate := identity, true
-	if o.Encode != nil {
-		encode = o.Encode
+	if options.Encode != nil {
+		encode = options.Encode
 	}
-	if o.Validate != nil {
-		validate = *o.Validate
+	if options.Validate != nil {
+		validate = *options.Validate
 	}
 
 	// Compile all the tokens into regexps.
@@ -433,6 +551,8 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 			}
 
 			if token, ok := token.(Token); ok {
+				optional := token.Modifier == "?" || token.Modifier == "*"
+				repeat := token.Modifier == "*" || token.Modifier == "+"
 				if data != nil && reflect.TypeOf(data).Kind() == reflect.Map {
 					data := toMap(data)
 					value := data[token.Name]
@@ -445,19 +565,19 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 					if value != nil {
 						if k := reflect.TypeOf(value).Kind(); k == reflect.Slice || k == reflect.Array {
 							value := toSlice(value)
-							if !token.Repeat {
+							if !repeat {
 								panic(fmt.Sprintf("Expected \"%v\" to not repeat, but got array",
 									token.Name))
 							}
 
 							if len(value) == 0 {
-								if token.Optional {
+								if optional {
 									continue
 								}
 								panic(fmt.Sprintf("Expected \"%v\" to not be empty", token.Name))
 							}
 
-							for j, v := range value {
+							for _, v := range value {
 								segment := encode(fmt.Sprintf("%v", v), token)
 
 								if validate {
@@ -467,12 +587,7 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 									}
 								}
 
-								if j == 0 {
-									path += token.Prefix
-								} else {
-									path += token.Delimiter
-								}
-								path += segment
+								path += token.Prefix + segment + token.Suffix
 							}
 
 							continue
@@ -500,17 +615,17 @@ func tokensToFunction(tokens []interface{}, o *Options) (
 							}
 						}
 
-						path += token.Prefix + segment
+						path += token.Prefix + segment + token.Suffix
 						continue
 					}
 				}
 
-				if token.Optional {
+				if optional {
 					continue
 				}
 
 				s := "a string"
-				if token.Repeat {
+				if repeat {
 					s = "an array"
 				}
 				panic(fmt.Sprintf("Expected \"%v\" to be %v", token.Name, s))
@@ -587,8 +702,8 @@ func quote(s string) string {
 }
 
 // Get the flags for a regexp from the options.
-func flags(o *Options) regexp2.RegexOptions {
-	if o != nil && o.Sensitive {
+func flags(options *Options) regexp2.RegexOptions {
+	if options != nil && options.Sensitive {
 		return regexp2.None
 	}
 	return regexp2.IgnoreCase
@@ -619,12 +734,11 @@ func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 
 			for i := 0; i < totalGroupCount; i++ {
 				newTokens = append(newTokens, Token{
-					Name:      i,
-					Prefix:    "",
-					Delimiter: "",
-					Optional:  false,
-					Repeat:    false,
-					Pattern:   "",
+					Name:     i,
+					Prefix:   "",
+					Suffix:   "",
+					Modifier: "",
+					Pattern:  "",
 				})
 			}
 
@@ -637,62 +751,49 @@ func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 }
 
 // Transform an array into a regexp.
-func arrayToRegexp(path []interface{}, tokens *[]Token, o *Options) (*regexp2.Regexp, error) {
+func arrayToRegexp(path []interface{}, tokens *[]Token, options *Options) (*regexp2.Regexp, error) {
 	var parts []string
 
 	for i := 0; i < len(path); i++ {
-		r, err := PathToRegexp(path[i], tokens, o)
+		r, err := PathToRegexp(path[i], tokens, options)
 		if err != nil {
 			return nil, err
 		}
 		parts = append(parts, r.String())
 	}
 
-	return regexp2.Compile("(?:"+strings.Join(parts, "|")+")", flags(o))
+	return regexp2.Compile("(?:"+strings.Join(parts, "|")+")", flags(options))
 }
 
 // Create a path regexp from string input.
-func stringToRegexp(path string, tokens *[]Token, o *Options) (*regexp2.Regexp, error) {
-	return tokensToRegExp(Parse(path, o), tokens, o)
+func stringToRegexp(path string, tokens *[]Token, options *Options) (*regexp2.Regexp, error) {
+	return tokensToRegExp(Parse(path, options), tokens, options)
 }
 
 // Expose a function for taking tokens and returning a RegExp.
-func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*regexp2.Regexp, error) {
-	if o == nil {
-		o = &Options{}
+func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, options *Options) (*regexp2.Regexp, error) {
+	if options == nil {
+		options = &Options{}
 	}
 
-	strict, start, end, route, encode := o.Strict, true, true, "", identity
-	if o.Start != nil {
-		start = *o.Start
+	strict, start, end, route, encode := options.Strict, true, true, "", identity
+	if options.Start != nil {
+		start = *options.Start
 	}
-	if o.End != nil {
-		end = *o.End
+	if options.End != nil {
+		end = *options.End
 	}
-	if o.Encode != nil {
-		encode = o.Encode
-	}
-
-	var ends []string
-	if o.EndsWith != nil {
-		if str, ok := o.EndsWith.(string); ok {
-			ends = []string{str}
-		} else if arr, ok := o.EndsWith.([]string); ok {
-			ends = arr
-		} else {
-			return nil, errors.New("endsWith should be string or []string")
-		}
+	if options.Encode != nil {
+		encode = options.Encode
 	}
 
-	delimiter := anyString(o.Delimiter, defaultDelimiter)
-	arr := make([]string, len(ends)+1)
-	for i, v := range ends {
-		v = escapeString(v)
-		arr[i] = v
+	endsWith := "$"
+	// avoid syntax.ErrUnterminatedBracket `unterminated [] set`
+	// empty [] is not allowed in regexp2
+	if options.EndsWith != "" {
+		endsWith = "[" + escapeString(options.EndsWith) + "]|$"
 	}
-	arr[len(ends)] = "$"
-	endsWith := strings.Join(arr, "|")
-
+	delimiter := "[" + escapeString(anyString(options.Delimiter, "/")) + "]"
 	if start {
 		route = "^"
 	}
@@ -708,24 +809,31 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 		if str, ok := token.(string); ok {
 			route += escapeString(encode(str, nil))
 		} else if token, ok := token.(Token); ok {
-			capture := token.Pattern
-			if token.Repeat {
-				capture = "(?:" + token.Pattern + ")(?:" + escapeString(token.Delimiter) +
-					"(?:" + token.Pattern + "))*"
-			}
+			prefix := escapeString(encode(token.Prefix, nil))
+			suffix := escapeString(encode(token.Suffix, nil))
 
-			if tokens != nil {
-				newTokens = append(newTokens, token)
-			}
-
-			if token.Optional {
-				if token.Prefix == "" {
-					route += "(" + capture + ")?"
+			if token.Pattern != "" {
+				if tokens != nil {
+					newTokens = append(newTokens, token)
+				}
+				if prefix != "" || suffix != "" {
+					if token.Modifier == "+" || token.Modifier == "*" {
+						mod := ""
+						if token.Modifier == "*" {
+							mod = "?"
+						}
+						route += "(?:" + prefix + "((?:" + token.Pattern + ")" +
+							"(?:" + suffix + prefix + "(?:" + token.Pattern + "))" +
+							"*)" + suffix + ")" + mod
+					} else {
+						route += "(?:" + prefix + "(" + token.Pattern + ")" +
+							"" + suffix + ")" + token.Modifier
+					}
 				} else {
-					route += "(?:" + escapeString(token.Prefix) + "(" + capture + "))?"
+					route += "(" + token.Pattern + ")" + token.Modifier
 				}
 			} else {
-				route += escapeString(token.Prefix) + "(" + capture + ")"
+				route += "(?:" + prefix + suffix + ")" + token.Modifier
 			}
 		}
 	}
@@ -737,7 +845,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 
 	if end {
 		if !strict {
-			route += "(?:" + escapeString(delimiter) + ")?"
+			route += delimiter + "?"
 		}
 
 		s := "(?=" + endsWith + ")"
@@ -754,19 +862,19 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, o *Options) (*rege
 			if endToken == nil {
 				isEndDelimited = true
 			} else if str, ok := endToken.(string); ok {
-				isEndDelimited = str[len(str)-1:] == delimiter
+				isEndDelimited = strings.Index(delimiter, str[len(str)-1:]) > -1
 			}
 		}
 
 		if !strict {
-			route += "(?:" + escapeString(delimiter) + "(?=" + endsWith + "))?"
+			route += "(?:" + delimiter + "(?=" + endsWith + "))?"
 		}
 		if !isEndDelimited {
-			route += "(?=" + escapeString(delimiter) + "|" + endsWith + ")"
+			route += "(?=" + delimiter + "|" + endsWith + ")"
 		}
 	}
 
-	return regexp2.Compile(route, flags(o))
+	return regexp2.Compile(route, flags(options))
 }
 
 // PathToRegexp normalizes the given path string, returning a regular expression.

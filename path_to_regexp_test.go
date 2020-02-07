@@ -34,7 +34,8 @@ var tests = []a{
 		},
 		a{
 			a{nil, "/"},
-			a{m{}, "/"}, a{m{"id": 123}, "/"},
+			a{m{}, "/"},
+			a{m{"id": 123}, "/"},
 		},
 	},
 	{
@@ -189,12 +190,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -241,12 +241,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"/",
 		},
@@ -325,12 +324,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -362,12 +360,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"/",
 		},
@@ -463,12 +460,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -488,12 +484,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"/",
 		},
@@ -571,12 +566,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -596,12 +590,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"/",
 		},
@@ -656,12 +649,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -694,12 +686,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -717,12 +708,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"/",
 		},
@@ -741,12 +731,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -766,12 +755,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -796,12 +784,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -820,12 +807,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			"/",
 		},
@@ -845,12 +831,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			"/bar",
 		},
@@ -868,12 +853,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			"-bar",
 		},
@@ -892,12 +876,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    true,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "*",
+				Pattern:  "[^\\/]+?",
 			},
 			"-bar",
 		},
@@ -920,12 +903,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "+",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -957,12 +939,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "\\d+",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "+",
+				Pattern:  "\\d+",
 			},
 		},
 		a{
@@ -981,12 +962,11 @@ var tests = []a{
 		a{
 			"/route",
 			Token{
-				Name:      "ext",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "json|xml",
+				Name:     "ext",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "+",
+				Pattern:  "json|xml",
 			},
 		},
 		a{
@@ -1002,17 +982,16 @@ var tests = []a{
 		},
 	},
 	{
-		"/route.:ext/test",
+		"/route.:ext(\\w+)/test",
 		nil,
 		a{
 			"/route",
 			Token{
-				Name:      "ext",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "ext",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\w+",
 			},
 			"/test",
 		},
@@ -1035,12 +1014,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    true,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "*",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1074,12 +1052,11 @@ var tests = []a{
 		a{
 			"/route",
 			Token{
-				Name:      "ext",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  true,
-				Repeat:    true,
-				Pattern:   "[a-z]+",
+				Name:     "ext",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "*",
+				Pattern:  "[a-z]+",
 			},
 		},
 		a{
@@ -1105,12 +1082,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+",
 			},
 		},
 		a{
@@ -1131,12 +1107,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+",
 			},
 		},
 		a{
@@ -1153,12 +1128,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   ".*",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  ".*",
 			},
 		},
 		a{
@@ -1177,12 +1151,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "route",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[a-z]+",
+				Name:     "route",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[a-z]+",
 			},
 		},
 		a{
@@ -1202,12 +1175,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "route",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "this|that",
+				Name:     "route",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "this|that",
 			},
 		},
 		a{
@@ -1227,12 +1199,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "path",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    true,
-				Pattern:   "abc|xyz",
+				Name:     "path",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "*",
+				Pattern:  "abc|xyz",
 			},
 		},
 		a{
@@ -1275,12 +1246,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1302,12 +1272,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1325,12 +1294,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1348,12 +1316,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1368,28 +1335,28 @@ var tests = []a{
 		},
 	},
 	{
-		":test+",
+		"{:test/}+",
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "",
+				Suffix:   "/",
+				Modifier: "+",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
-			a{"route", a{"route", "route"}},
-			a{"/route", nil}, a{"", nil},
-			a{"foo/bar", a{"foo/bar", "foo/bar"}},
+			a{"route/", a{"route/", "route"}},
+			a{"/route", nil},
+			a{"", nil},
+			a{"foo/bar/", a{"foo/bar/", "foo/bar"}},
 		},
 		a{
 			a{m{}, nil},
 			a{m{"test": ""}, nil},
-			a{m{"test": a{"route"}}, "route"},
-			a{m{"test": a{"foo", "bar"}}, "foo/bar"},
+			a{m{"test": a{"route"}}, "route/"},
+			a{m{"test": a{"foo", "bar"}}, "foo/bar/"},
 		},
 	},
 
@@ -1415,12 +1382,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			".json",
 		},
@@ -1440,17 +1406,16 @@ var tests = []a{
 	 * Format params.
 	 */
 	{
-		"/test.:format",
+		"/test.:format(\\w+)",
 		nil,
 		a{
 			"/test",
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\w+",
 			},
 		},
 		a{
@@ -1465,25 +1430,23 @@ var tests = []a{
 		},
 	},
 	{
-		"/test.:format.:format",
+		"/test.:format(\\w+).:format(\\w+)",
 		nil,
 		a{
 			"/test",
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\w+",
 			},
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\w+",
 			},
 		},
 		a{
@@ -1496,17 +1459,16 @@ var tests = []a{
 		},
 	},
 	{
-		"/test.:format+",
+		"/test{.:format}+",
 		nil,
 		a{
 			"/test",
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "+",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1520,19 +1482,18 @@ var tests = []a{
 		},
 	},
 	{
-		"/test.:format",
+		"/test.:format(\\w+)",
 		&Options{
 			End: &falseValue,
 		},
 		a{
 			"/test",
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\w+",
 			},
 		},
 		a{
@@ -1549,12 +1510,11 @@ var tests = []a{
 		a{
 			"/test",
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			".",
 		},
@@ -1576,26 +1536,24 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
 			a{"/route.html", a{"/route.html", "route", "html"}},
 			a{"route", nil},
-			a{"/route.html.json", a{"/route.html.json", "route.html", "json"}},
+			a{"/route.html.json", a{"/route.html.json", "route", "html.json"}},
 		},
 		a{
 			a{m{}, nil},
@@ -1603,30 +1561,28 @@ var tests = []a{
 		},
 	},
 	{
-		"/:test.:format?",
+		"/:test{.:format}?",
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
 			a{"/route", a{"/route", "route", ""}},
 			a{"/route.json", a{"/route.json", "route", "json"}},
-			a{"/route.json.html", a{"/route.json.html", "route.json", "html"}},
+			a{"/route.json.html", a{"/route.json.html", "route", "json.html"}},
 		},
 		a{
 			a{m{"test": "route"}, "/route"},
@@ -1641,26 +1597,24 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\.\\/]+?",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
 			a{"/route", a{"/route", "route", ""}},
 			a{"/route.json", a{"/route.json", "route", "json"}},
-			a{"/route.json.html", a{"/route.json.html", "route.json", "html"}},
+			a{"/route.json.html", a{"/route.json.html", "route", "json.html"}},
 		},
 		a{
 			a{m{"test": "route"}, "/route"},
@@ -1677,12 +1631,11 @@ var tests = []a{
 		a{
 			"/test",
 			Token{
-				Name:      "format",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   ".*",
+				Name:     "format",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  ".*",
 			},
 			"z",
 		},
@@ -1706,12 +1659,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     0,
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+",
 			},
 		},
 		a{
@@ -1731,12 +1683,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     0,
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+",
 			},
 		},
 		a{
@@ -1754,12 +1705,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     0,
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "\\d+",
 			},
 		},
 		a{
@@ -1776,12 +1726,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   ".*",
+				Name:     0,
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  ".*",
 			},
 		},
 		a{
@@ -1800,12 +1749,11 @@ var tests = []a{
 		a{
 			"/route(\\",
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+\\\\",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+\\\\",
 			},
 			")",
 		},
@@ -1815,23 +1763,65 @@ var tests = []a{
 		a{},
 	},
 	{
-		"/(login)?",
+		"{/login}?",
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "login",
+				Name:     "",
+				Prefix:   "/login",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "",
+			},
+		},
+		a{
+			a{"/", a{"/"}},
+			a{"/login", a{"/login"}},
+		},
+		a{
+			a{nil, ""},
+			a{m{"": ""}, "/login"},
+		},
+	},
+	{
+		"{/login}",
+		nil,
+		a{
+			Token{
+				Name:     "",
+				Prefix:   "/login",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
+			},
+		},
+		a{
+			a{"/", nil},
+			a{"/login", a{"/login"}},
+		},
+		a{
+			a{m{"": ""}, "/login"},
+		},
+	},
+	{
+		"{/(.*)}",
+		nil,
+		a{
+			Token{
+				Name:     0,
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  ".*",
 			},
 		},
 		a{
 			a{"/", a{"/", ""}},
 			a{"/login", a{"/login", "login"}},
 		},
-		a{},
+		a{
+			a{m{0: "test"}, "/test"},
+		},
 	},
 
 	/**
@@ -1851,12 +1841,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
 			},
 		},
 		a{
@@ -1869,12 +1858,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
 			},
 		},
 		a{
@@ -1892,12 +1880,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
 			},
 		},
 		a{
@@ -1913,20 +1900,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+",
 			},
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
 			},
 		},
 		a{
@@ -1947,20 +1932,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -1977,20 +1960,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
 			},
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "",
 			},
 		},
 		a{
@@ -2031,16 +2012,16 @@ var tests = []a{
 		},
 	},
 	{
-		"/.+*?=^!:${}[]|",
+		"/.\\+\\*\\?\\{\\}=^!\\:$[]|",
 		nil,
 		a{
-			"/.+*?=^!:${}[]|",
+			"/.+*?{}=^!:$[]|",
 		},
 		a{
-			a{"/.+*?=^!:${}[]|", a{"/.+*?=^!:${}[]|"}},
+			a{"/.+*?{}=^!:$[]|", a{"/.+*?{}=^!:$[]|"}},
 		},
 		a{
-			a{nil, "/.+*?=^!:${}[]|"},
+			a{nil, "/.+*?{}=^!:$[]|"},
 		},
 	},
 	{
@@ -2049,20 +2030,18 @@ var tests = []a{
 		a{
 			"/test/",
 			Token{
-				Name:      "uid",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "u\\d+",
+				Name:     "uid",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "u\\d+",
 			},
 			Token{
-				Name:      "cid",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "c\\d+",
+				Name:     "cid",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "c\\d+",
 			},
 		},
 		a{
@@ -2082,32 +2061,30 @@ var tests = []a{
 	 * Unnamed group prefix.
 	 */
 	{
-		"\\/(apple-)?icon-:res(\\d+).png",
+		"/{apple-}?icon-:res(\\d+).png",
 		nil,
 		a{
 			"/",
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "apple-",
+				Name:     "",
+				Prefix:   "apple-",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "",
 			},
-			"icon",
+			"icon-",
 			Token{
-				Name:      "res",
-				Prefix:    "-",
-				Delimiter: "-",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+",
+				Name:     "res",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+",
 			},
 			".png",
 		},
 		a{
-			a{"/icon-240.png", a{"/icon-240.png", "", "240"}},
-			a{"/apple-icon-240.png", a{"/apple-icon-240.png", "apple-", "240"}},
+			a{"/icon-240.png", a{"/icon-240.png", "240"}},
+			a{"/apple-icon-240.png", a{"/apple-icon-240.png", "240"}},
 		},
 		a{},
 	},
@@ -2120,20 +2097,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "bar",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "bar",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -2144,16 +2119,15 @@ var tests = []a{
 		},
 	},
 	{
-		"/:foo(test\\)/bar",
+		"/:foo\\(test\\)/bar",
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"(test)/bar",
 		},
@@ -2165,20 +2139,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "remote",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[\\w-.]+",
+				Name:     "remote",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[\\w-.]+",
 			},
 			Token{
-				Name:      "user",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[\\w-]+",
+				Name:     "user",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[\\w-]+",
 			},
 		},
 		a{
@@ -2196,12 +2168,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"?",
 		},
@@ -2217,12 +2188,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "+",
+				Pattern:  "[^\\/]+?",
 			},
 			"baz",
 		},
@@ -2243,12 +2213,11 @@ var tests = []a{
 		a{
 			"/",
 			Token{
-				Name:      "pre",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "pre",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			"baz",
 		},
@@ -2266,21 +2235,19 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			"(",
 			Token{
-				Name:      "bar",
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "bar",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			")",
 		},
@@ -2298,20 +2265,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "postType",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "video|audio|text",
+				Name:     "postType",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "video|audio|text",
 			},
 			Token{
-				Name:      0,
-				Prefix:    "",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "\\+.+",
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "\\+.+",
 			},
 		},
 		a{
@@ -2329,20 +2294,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "bar",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "bar",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			"-ext",
 		},
@@ -2365,20 +2328,18 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "required",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "required",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 			Token{
-				Name:      "optional",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  true,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "optional",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "[^\\/]+?",
 			},
 			"-ext",
 		},
@@ -2389,7 +2350,6 @@ var tests = []a{
 		},
 		a{
 			a{m{"required": "foo"}, "/foo-ext"},
-			a{m{"required": "foo", "optional": "bar"}, "/foo/bar-ext"},
 		},
 	},
 
@@ -2401,12 +2361,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "foo",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\/]+?",
+				Name:     "foo",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -2470,12 +2429,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "domain",
-				Prefix:    "",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.]+?",
+				Name:     "domain",
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\.]+?",
 			},
 			".com",
 		},
@@ -2496,12 +2454,11 @@ var tests = []a{
 		a{
 			"mail",
 			Token{
-				Name:      "domain",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.]+?",
+				Name:     "domain",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\.]+?",
 			},
 			".com",
 		},
@@ -2516,18 +2473,15 @@ var tests = []a{
 	},
 	{
 		"example.:ext",
-		&Options{
-			Delimiter: ".",
-		},
+		&Options{},
 		a{
 			"example",
 			Token{
-				Name:      "ext",
-				Prefix:    ".",
-				Delimiter: ".",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "[^\\.]+?",
+				Name:     "ext",
+				Prefix:   ".",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
 			},
 		},
 		a{
@@ -2597,29 +2551,25 @@ var tests = []a{
 	},
 
 	/**
-	 * Custom delimiters.
+	 * Custom prefixes.
 	 */
 	{
-		"$:foo$:bar?",
-		&Options{
-			Delimiter: "$",
-		},
+		"{$:foo}{$:bar}?",
+		&Options{},
 		a{
 			Token{
-				Delimiter: "$",
-				Name:      "foo",
-				Optional:  false,
-				Pattern:   "[^\\$]+?",
-				Prefix:    "$",
-				Repeat:    false,
+				Name:     "foo",
+				Pattern:  "[^\\/]+?",
+				Prefix:   "$",
+				Suffix:   "",
+				Modifier: "",
 			},
 			Token{
-				Delimiter: "$",
-				Name:      "bar",
-				Optional:  true,
-				Pattern:   "[^\\$]+?",
-				Prefix:    "$",
-				Repeat:    false,
+				Name:     "bar",
+				Pattern:  "[^\\/]+?",
+				Prefix:   "$",
+				Suffix:   "",
+				Modifier: "?",
 			},
 		},
 		a{
@@ -2632,61 +2582,30 @@ var tests = []a{
 		},
 	},
 	{
-		":test+",
-		&Options{
-			Delimiter: " ",
-		},
-		a{
-			Token{
-				Name:      "test",
-				Prefix:    "",
-				Delimiter: " ",
-				Optional:  false,
-				Repeat:    true,
-				Pattern:   "[^ ]+?",
-			},
-		},
-		a{
-			a{"hello", a{"hello", "hello"}},
-			a{" hello", nil},
-			a{"", nil},
-			a{"hello world", a{"hello world", "hello world"}},
-		},
-		a{
-			a{m{}, nil},
-			a{m{"test": ""}, nil},
-			a{m{"test": a{"hello"}}, "hello"},
-			a{m{"test": a{"hello", "world"}}, "hello world"},
-		},
-	},
-	{
-		"name/:attr1?-:attr2?-:attr3?",
+		"name/:attr1?{-:attr2}?{-:attr3}?",
 		&Options{},
 		a{
 			"name",
 			Token{
-				Delimiter: "/",
-				Name:      "attr1",
-				Optional:  true,
-				Pattern:   "[^\\/]+?",
-				Prefix:    "/",
-				Repeat:    false,
+				Name:     "attr1",
+				Pattern:  "[^\\/]+?",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "?",
 			},
 			Token{
-				Delimiter: "-",
-				Name:      "attr2",
-				Optional:  true,
-				Pattern:   "[^-\\/]+?",
-				Prefix:    "-",
-				Repeat:    false,
+				Name:     "attr2",
+				Pattern:  "[^\\/]+?",
+				Prefix:   "-",
+				Suffix:   "",
+				Modifier: "?",
 			},
 			Token{
-				Delimiter: "-",
-				Name:      "attr3",
-				Optional:  true,
-				Pattern:   "[^-\\/]+?",
-				Prefix:    "-",
-				Repeat:    false,
+				Name:     "attr3",
+				Pattern:  "[^\\/]+?",
+				Prefix:   "-",
+				Suffix:   "",
+				Modifier: "?",
 			},
 		},
 		a{
@@ -2703,45 +2622,6 @@ var tests = []a{
 			a{m{"attr2": "attr"}, "name-attr"},
 		},
 	},
-	{
-		"name/:attr1?-:attr2?",
-		&Options{
-			Whitelist: []string{"/"},
-		},
-		a{
-			"name",
-			Token{
-				Delimiter: "/",
-				Name:      "attr1",
-				Optional:  true,
-				Pattern:   "[^\\/]+?",
-				Prefix:    "/",
-				Repeat:    false,
-			},
-			"-",
-			Token{
-				Delimiter: "/",
-				Name:      "attr2",
-				Optional:  true,
-				Pattern:   "[^\\/]+?",
-				Prefix:    "",
-				Repeat:    false,
-			},
-		},
-		a{
-			a{"name/1", nil},
-			a{"name/1-", a{"name/1-", "1", ""}},
-			a{"name/1-2", a{"name/1-2", "1", "2"}},
-			a{"name/1-2-3", a{"name/1-2-3", "1", "2-3"}},
-			a{"name/foo-bar/route", nil},
-			a{"name/test/route", nil},
-		},
-		a{
-			a{m{}, "name-"},
-			a{m{"attr1": "test"}, "name/test-"},
-			a{m{"attr2": "attr"}, "name-attr"},
-		},
-	},
 
 	/**
 	 * Case-sensitive compile tokensToFunction params.
@@ -2753,12 +2633,11 @@ var tests = []a{
 		},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "abc",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "abc",
 			},
 		},
 		a{
@@ -2775,12 +2654,11 @@ var tests = []a{
 		&Options{},
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "abc",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "abc",
 			},
 		},
 		a{
@@ -2801,12 +2679,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "\\d+(?:\\.\\d+)?",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "\\d+(?:\\.\\d+)?",
 			},
 		},
 		a{
@@ -2830,12 +2707,11 @@ var tests = []a{
 		nil,
 		a{
 			Token{
-				Name:      "test",
-				Prefix:    "/",
-				Delimiter: "/",
-				Optional:  false,
-				Repeat:    false,
-				Pattern:   "(?!login)[^/]+",
+				Name:     "test",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "(?!login)[^/]+",
 			},
 		},
 		a{
@@ -2847,6 +2723,34 @@ var tests = []a{
 			a{m{"test": "login"}, nil},
 		},
 	},
+	{
+		"/user(s)?/:user",
+		nil,
+		a{
+			"/user",
+			Token{
+				Name:     0,
+				Prefix:   "",
+				Suffix:   "",
+				Modifier: "?",
+				Pattern:  "s",
+			},
+			Token{
+				Name:     "user",
+				Prefix:   "/",
+				Suffix:   "",
+				Modifier: "",
+				Pattern:  "[^\\/]+?",
+			},
+		},
+		a{
+			a{"/user/123", a{"/user/123", "", "123"}},
+			a{"/users/123", a{"/users/123", "s", "123"}},
+		},
+		a{
+			a{m{"user": "123"}, "/user/123"},
+		},
+	},
 }
 
 // Dynamically generate the entire test suite.
@@ -2854,12 +2758,11 @@ func TestPathToRegexp(t *testing.T) {
 	testPath := "/user/:id"
 
 	testParam := Token{
-		Name:      "id",
-		Prefix:    "/",
-		Delimiter: "/",
-		Optional:  false,
-		Repeat:    false,
-		Pattern:   "[^\\/]+?",
+		Name:     "id",
+		Prefix:   "/",
+		Suffix:   "",
+		Modifier: "",
+		Pattern:  "[^\\/]+?",
 	}
 
 	t.Run("arguments", func(t *testing.T) {
@@ -2924,9 +2827,9 @@ func TestPathToRegexp(t *testing.T) {
 			}
 		})
 
-		t.Run("should throw on non-capturing pattern group", func(t *testing.T) {
+		t.Run("should throw on non-capturing pattern", func(t *testing.T) {
 			defer func() {
-				want := `Path pattern must be a capturing group`
+				want := `Pattern cannot start with "?" at 6`
 				if err := recover(); !reflect.DeepEqual(err, want) {
 					t.Errorf("got panic(%v) want panic(%v)", err, want)
 				}
@@ -2937,14 +2840,79 @@ func TestPathToRegexp(t *testing.T) {
 			}
 		})
 
-		t.Run("should throw on nested capturing regexp groups", func(t *testing.T) {
+		t.Run("should throw on nested capturing group", func(t *testing.T) {
 			defer func() {
-				want := "Capturing groups are not allowed in pattern, use a non-capturing group: (\\d+(?:\\.\\d+)?)"
+				want := "Capturing groups are not allowed at 9"
 				if err := recover(); !reflect.DeepEqual(err, want) {
 					t.Errorf("got panic(%v) want panic(%v)", err, want)
 				}
 			}()
 			_, err := PathToRegexp("/:foo(\\d+(\\.\\d+)?)", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+
+		t.Run("should throw on unbalanced pattern", func(t *testing.T) {
+			defer func() {
+				want := "Unbalanced pattern at 5"
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/:foo(abc", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+
+		t.Run("should throw on missing pattern", func(t *testing.T) {
+			defer func() {
+				want := "Missing pattern at 5"
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/:foo()", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+
+		t.Run("should throw on missing name", func(t *testing.T) {
+			defer func() {
+				want := "Missing parameter name at 1"
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/:(test)", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+
+		t.Run("should throw on nested groups", func(t *testing.T) {
+			defer func() {
+				want := fmt.Sprintf("Unexpected %d at 3, expected %d", modeOpen, modeClose)
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/{a{b:foo}}", nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+
+		t.Run("should throw on misplaced modifier", func(t *testing.T) {
+			defer func() {
+				want := fmt.Sprintf("Unexpected %d at 4, expected %d", modeModifier, modeEnd)
+				if err := recover(); !reflect.DeepEqual(err, want) {
+					t.Errorf("got panic(%v) want panic(%v)", err, want)
+				}
+			}()
+			_, err := PathToRegexp("/foo?", nil, nil)
 			if err != nil {
 				t.Error(err)
 			}
@@ -3437,13 +3405,8 @@ func mergeOptions(o1 *Options, o2 *Options) *Options {
 	}
 
 	endsWith := o1.EndsWith
-	if o2.EndsWith != nil {
+	if o2.EndsWith != "" {
 		endsWith = o2.EndsWith
-	}
-
-	whitelist := o1.Whitelist
-	if o2.Whitelist != nil {
-		whitelist = o2.Whitelist
 	}
 
 	encode := o1.Encode
@@ -3464,7 +3427,6 @@ func mergeOptions(o1 *Options, o2 *Options) *Options {
 		Validate:  validate,
 		Delimiter: o2.Delimiter,
 		EndsWith:  endsWith,
-		Whitelist: whitelist,
 		Encode:    encode,
 		Decode:    decode,
 	}
