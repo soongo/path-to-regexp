@@ -55,7 +55,7 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
   - **End** When `true` the regexp will match to the end of the string. (default: `true`)
   - **Start** When `true` the regexp will match from the beginning of the string. (default: `true`)
   - **Validate** When `false` the function can produce an invalid (unmatched) path. (default: `true`)
-  - **Delimiter** The default delimiter for segments, e.g. `[^/]` for `:named` patterns. (default: `'/'`)
+  - **Delimiter** The default delimiter for segments, e.g. `[^/#?]` for `:named` patterns. (default: `'/#?'`)
   - **EndsWith** Optional character, or list of characters, to treat as "end" characters.
   - **prefixes** List of characters to automatically consider prefixes when parsing. (default: `./`)
   - **Encode** How to encode uri. (default: `func (uri string, token interface{}) string { return uri }`)

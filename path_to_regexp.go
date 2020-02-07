@@ -287,7 +287,7 @@ func Parse(str string, options *Options) []interface{} {
 	if options.Prefixes != nil {
 		prefixes = *options.Prefixes
 	}
-	defaultPattern := "[^" + escapeString(anyString(options.Delimiter, "/")) + "]+?"
+	defaultPattern := "[^" + escapeString(anyString(options.Delimiter, "/#?")) + "]+?"
 	result, key, i, path := make([]interface{}, 0), 0, 0, ""
 
 	tryConsume := func(mode lexTokenMode) *string {
@@ -793,7 +793,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, options *Options) 
 	if options.EndsWith != "" {
 		endsWith = "[" + escapeString(options.EndsWith) + "]|$"
 	}
-	delimiter := "[" + escapeString(anyString(options.Delimiter, "/")) + "]"
+	delimiter := "[" + escapeString(anyString(options.Delimiter, "/#?")) + "]"
 	if start {
 		route = "^"
 	}
@@ -849,7 +849,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, options *Options) 
 		}
 
 		s := "(?=" + endsWith + ")"
-		if endsWith == "$" {
+		if options.EndsWith == "" {
 			s = "$"
 		}
 		route += s
