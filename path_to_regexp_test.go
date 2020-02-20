@@ -2811,41 +2811,41 @@ func TestPathToRegexp(t *testing.T) {
 		t.Run("should work without different call combinations", func(t *testing.T) {
 			_, err := PathToRegexp("/test", nil, nil)
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 			_, err = PathToRegexp("/test", &[]Token{}, nil)
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 			_, err = PathToRegexp("/test", nil, &Options{})
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 
 			_, err = PathToRegexp(regexp2.MustCompile("^\\/test", regexp2.None), nil, nil)
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 			_, err = PathToRegexp(regexp2.MustCompile("^\\/test", regexp2.None), &[]Token{}, nil)
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 			_, err = PathToRegexp(regexp2.MustCompile("^\\/test", regexp2.None), nil, &Options{})
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 
 			_, err = PathToRegexp([]string{"/a", "/b"}, nil, nil)
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 			_, err = PathToRegexp([]string{"/a", "/b"}, &[]Token{}, nil)
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 			_, err = PathToRegexp([]string{"/a", "/b"}, nil, &Options{})
 			if err != nil {
-				t.Error(err.Error())
+				t.Error(err)
 			}
 		})
 
@@ -2853,121 +2853,87 @@ func TestPathToRegexp(t *testing.T) {
 			tokens := &[]Token{}
 			r, err := PathToRegexp(testPath, tokens, &Options{End: &falseValue})
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
-			var want interface{}
-			want = &[]Token{testParam}
+			var expect interface{}
+			expect = &[]Token{testParam}
 
-			if !reflect.DeepEqual(tokens, want) {
-				t.Errorf("got %v want %v", tokens, want)
+			if !reflect.DeepEqual(tokens, expect) {
+				t.Errorf("got %v expect %v", tokens, expect)
 			}
 
-			want = []string{"/user/123", "123"}
-			if !reflect.DeepEqual(exec(r, "/user/123/show"), want) {
-				t.Errorf("got %v want %v", tokens, want)
+			expect = []string{"/user/123", "123"}
+			if !reflect.DeepEqual(exec(r, "/user/123/show"), expect) {
+				t.Errorf("got %v expect %v", tokens, expect)
 			}
 		})
 
 		t.Run("should throw on non-capturing pattern", func(t *testing.T) {
-			defer func() {
-				want := `Pattern cannot start with "?" at 6`
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/:foo(?:\\d+(\\.\\d+)?)", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := errors.New(`pattern cannot start with "?" at 6`)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got error(%v) expect error(%v)", err, expect)
 			}
 		})
 
 		t.Run("should throw on nested capturing group", func(t *testing.T) {
-			defer func() {
-				want := "Capturing groups are not allowed at 9"
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/:foo(\\d+(\\.\\d+)?)", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := errors.New("capturing groups are not allowed at 9")
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got panic(%v) want panic(%v)", err, expect)
 			}
 		})
 
 		t.Run("should throw on unbalanced pattern", func(t *testing.T) {
-			defer func() {
-				want := "Unbalanced pattern at 5"
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/:foo(abc", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := errors.New("unbalanced pattern at 5")
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got panic(%v) want panic(%v)", err, expect)
 			}
 		})
 
 		t.Run("should throw on missing pattern", func(t *testing.T) {
-			defer func() {
-				want := "Missing pattern at 5"
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/:foo()", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := errors.New("missing pattern at 5")
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got panic(%v) expect panic(%v)", err, expect)
 			}
 		})
 
 		t.Run("should throw on missing name", func(t *testing.T) {
-			defer func() {
-				want := "Missing parameter name at 1"
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/:(test)", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := errors.New("missing parameter name at 1")
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got panic(%v) expect panic(%v)", err, expect)
 			}
 		})
 
 		t.Run("should throw on nested groups", func(t *testing.T) {
-			defer func() {
-				want := fmt.Sprintf("Unexpected %d at 3, expected %d", modeOpen, modeClose)
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/{a{b:foo}}", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := fmt.Errorf("unexpected %d at 3, expected %d", modeOpen, modeClose)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got panic(%v) expect panic(%v)", err, expect)
 			}
 		})
 
 		t.Run("should throw on misplaced modifier", func(t *testing.T) {
-			defer func() {
-				want := fmt.Sprintf("Unexpected %d at 4, expected %d", modeModifier, modeEnd)
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			_, err := PathToRegexp("/foo?", nil, nil)
-			if err != nil {
-				t.Error(err)
+			expect := fmt.Errorf("unexpected %d at 4, expected %d", modeModifier, modeEnd)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got panic(%v) expect panic(%v)", err, expect)
 			}
 		})
 	})
 
 	t.Run("tokens", func(t *testing.T) {
-		tokens := Parse(testPath, nil)
+		tokens, err := Parse(testPath, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 		t.Run("should expose method to compile tokens to regexp", func(t *testing.T) {
 			r, err := tokensToRegExp(tokens, nil, nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
 			want := []string{"/user/123", "123"}
 			result := exec(r, "/user/123")
@@ -2978,11 +2944,13 @@ func TestPathToRegexp(t *testing.T) {
 		t.Run("should expose method to compile tokens to a path function", func(t *testing.T) {
 			fn, err := tokensToFunction(tokens, nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
 			want := "/user/123"
-			result := fn(map[interface{}]interface{}{"id": 123})
+			result, err := fn(map[interface{}]interface{}{"id": 123})
+			if err != nil {
+				t.Fatal(err)
+			}
 			if !reflect.DeepEqual(result, want) {
 				t.Errorf("got %v want %v", result, want)
 			}
@@ -3001,13 +2969,16 @@ func TestPathToRegexp(t *testing.T) {
 				}
 				r, err := PathToRegexp(path, tokens, o)
 				if err != nil {
-					t.Error(err.Error())
-					return
+					t.Fatal(err)
 				}
 				// Parsing and compiling is only supported with string input.
 				if path, ok := path.(string); ok {
 					t.Run("should parse", func(t *testing.T) {
-						result := a(Parse(path, o))
+						parsedTokens, err := Parse(path, o)
+						if err != nil {
+							t.Fatal(err)
+						}
+						result := a(parsedTokens)
 						if !reflect.DeepEqual(result, rawTokens) {
 							t.Errorf("got %v want %v", result, rawTokens)
 						}
@@ -3022,24 +2993,24 @@ func TestPathToRegexp(t *testing.T) {
 							}
 							toPath, err := Compile(path, mergeOptions(o, o1))
 							if err != nil {
-								t.Error(err.Error())
-								return
+								t.Fatal(err)
 							}
 							if result != nil {
 								t.Run("should compile using "+inspect(params), func(t *testing.T) {
-									r := toPath(params)
+									r, err := toPath(params)
+									if err != nil {
+										t.Fatal(err)
+									}
 									if !reflect.DeepEqual(r, result) {
 										t.Errorf("got %v want %v", result, path)
 									}
 								})
 							} else {
 								t.Run("should not compile using "+inspect(params), func(t *testing.T) {
-									defer func() {
-										if err := recover(); err == nil {
-											t.Errorf("got %v want panic", err)
-										}
-									}()
-									toPath(params)
+									_, err := toPath(params)
+									if err == nil {
+										t.Errorf("got %v want panic", err)
+									}
 								})
 							}
 						}
@@ -3093,7 +3064,10 @@ func TestPathToRegexp(t *testing.T) {
 						if path, ok := path.(string); ok && params != nil {
 							match := MustMatch(path, options)
 							t.Run(message+" params", func(t *testing.T) {
-								m := match(pathname.(string))
+								m, err := match(pathname.(string))
+								if err != nil {
+									t.Fatal(err)
+								}
 								if !params.equals(m) {
 									t.Errorf("got %v want %v", m, params)
 								}
@@ -3107,78 +3081,63 @@ func TestPathToRegexp(t *testing.T) {
 
 	t.Run("compile errors", func(t *testing.T) {
 		t.Run("should throw when a required param is undefined", func(t *testing.T) {
-			defer func() {
-				want := `Expected "b" to be a string`
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			toPath, err := Compile("/a/:b/c", nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
-			toPath(nil)
+			_, err = toPath(nil)
+			expect := errors.New(`expected "b" to be a string`)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got error(%v) expect error(%v)", err, expect)
+			}
 		})
 
 		t.Run("should throw when it does not match the pattern", func(t *testing.T) {
-			defer func() {
-				want := `Expected "foo" to match "\d+", but got "abc"`
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			toPath, err := Compile("/:foo(\\d+)", nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
-			toPath(map[interface{}]interface{}{"foo": "abc"})
+			_, err = toPath(map[interface{}]interface{}{"foo": "abc"})
+			expect := errors.New(`expected "foo" to match "\d+", but got "abc"`)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got error(%v) expect error(%v)", err, expect)
+			}
 		})
 
 		t.Run("should throw when expecting a repeated value", func(t *testing.T) {
-			defer func() {
-				want := `Expected "foo" to not be empty`
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			toPath, err := Compile("/:foo+", nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
-			toPath(map[interface{}]interface{}{"foo": []interface{}{}})
+			_, err = toPath(map[interface{}]interface{}{"foo": []interface{}{}})
+			expect := errors.New(`expected "foo" to not be empty`)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got error(%v) expect error(%v)", err, expect)
+			}
 		})
 
 		t.Run("should throw when not expecting a repeated value", func(t *testing.T) {
-			defer func() {
-				want := `Expected "foo" to not repeat, but got array`
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			toPath, err := Compile("/:foo", nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
-			toPath(map[interface{}]interface{}{"foo": []interface{}{}})
+			_, err = toPath(map[interface{}]interface{}{"foo": []interface{}{}})
+			expect := errors.New(`expected "foo" to not repeat, but got array`)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got error(%v) expect error(%v)", err, expect)
+			}
 		})
 
 		t.Run("should throw when repeated value does not match", func(t *testing.T) {
-			defer func() {
-				want := `Expected all "foo" to match "\d+"`
-				if err := recover(); !reflect.DeepEqual(err, want) {
-					t.Errorf("got panic(%v) want panic(%v)", err, want)
-				}
-			}()
 			toPath, err := Compile("/:foo(\\d+)+", nil)
 			if err != nil {
-				t.Error(err.Error())
-				return
+				t.Fatal(err)
 			}
-			toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}})
+			_, err = toPath(map[interface{}]interface{}{"foo": []interface{}{1, 2, 3, "a"}})
+			expect := errors.New(`expected all "foo" to match "\d+"`)
+			if !reflect.DeepEqual(err, expect) {
+				t.Errorf("got error(%v) expect error(%v)", err, expect)
+			}
 		})
 	})
 
@@ -3286,19 +3245,21 @@ func TestDecodeURI(t *testing.T) {
 		"https://developer.mozilla.org/ru/docs/JavaScript_%D1%88%D0%B5%D0%BB%D0%BB%D1%8B":           "https://developer.mozilla.org/ru/docs/JavaScript_шеллы",
 	}
 	for k, v := range tests {
-		result := decodeURI(k)
+		result, err := decodeURI(k)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
 		if result != v {
 			t.Errorf("got %v want %v", result, v)
 		}
 	}
 
 	t.Run("malformed URI sequence", func(t *testing.T) {
-		defer func() {
-			if err := recover(); err == nil {
-				t.Errorf("got nil want panic")
-			}
-		}()
-		decodeURI("%E0%A4%A")
+		_, err := decodeURI("%E0%A4%A")
+		if err == nil {
+			t.Errorf("got nil want panic")
+		}
 	})
 }
 

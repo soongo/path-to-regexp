@@ -57,9 +57,9 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
   - **Validate** When `false` the function can produce an invalid (unmatched) path. (default: `true`)
   - **Delimiter** The default delimiter for segments, e.g. `[^/#?]` for `:named` patterns. (default: `'/#?'`)
   - **EndsWith** Optional character, or list of characters, to treat as "end" characters.
-  - **prefixes** List of characters to automatically consider prefixes when parsing. (default: `./`)
+  - **Prefixes** List of characters to automatically consider prefixes when parsing. (default: `./`)
   - **Encode** How to encode uri. (default: `func (uri string, token interface{}) string { return uri }`)
-  - **Decode** How to decode uri. (default: `func (uri string, token interface{}) string { return uri }`)
+  - **Decode** How to decode uri. (default: `func (uri string, token interface{}) (string, error) { return uri }`)
 
 ```go
 var tokens []pathToRegexp.Token
@@ -270,7 +270,7 @@ fmt.Printf("%d %q\n", match.Index, match)
 The `match` function will return a function for transforming paths into parameters:
 
 ```go
-match := pathToRegexp.MustMatch("/user/:id", &pathToRegexp.Options{Decode: func(str string, token interface{}) string {
+match := pathToRegexp.MustMatch("/user/:id", &pathToRegexp.Options{Decode: func(str string, token interface{}) (string, error) {
     return pathToRegexp.DecodeURIComponent(str)
 }})
 
@@ -288,7 +288,7 @@ match("/user/caf%C3%A9")
 The `Parse` function will return a list of strings and tokens from a path string:
 
 ```go
-tokens := pathToRegexp.Parse("/route/:foo/(.*)", nil)
+tokens, _ := pathToRegexp.Parse("/route/:foo/(.*)", nil)
 
 fmt.Printf("%#v\n", tokens[0])
 //=> "/route"
