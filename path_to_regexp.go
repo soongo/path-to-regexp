@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"unsafe"
 
 	"github.com/dlclark/regexp2"
 )
@@ -747,10 +746,8 @@ func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 		}
 
 		if totalGroupCount > 0 {
-			newTokens := append(make([]Token, 0), *tokens...)
-
 			for i := 0; i < totalGroupCount; i++ {
-				newTokens = append(newTokens, Token{
+				*tokens = append(*tokens, Token{
 					Name:     i,
 					Prefix:   "",
 					Suffix:   "",
@@ -758,9 +755,6 @@ func regexpToRegexp(path *regexp2.Regexp, tokens *[]Token) *regexp2.Regexp {
 					Pattern:  "",
 				})
 			}
-
-			hdr := (*reflect.SliceHeader)(unsafe.Pointer(tokens))
-			*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newTokens))
 		}
 	}
 
@@ -827,12 +821,6 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, options *Options) 
 		route = "^"
 	}
 
-	var newTokens []Token
-	if tokens != nil {
-		newTokens = make([]Token, 0, len(*tokens)+len(rawTokens))
-		newTokens = append(newTokens, *tokens...)
-	}
-
 	// Iterate over the tokens and create our regexp string.
 	for _, token := range rawTokens {
 		if str, ok := token.(string); ok {
@@ -855,7 +843,7 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, options *Options) 
 
 			if token.Pattern != "" {
 				if tokens != nil {
-					newTokens = append(newTokens, token)
+					*tokens = append(*tokens, token)
 				}
 				if prefix != "" || suffix != "" {
 					if token.Modifier == "+" || token.Modifier == "*" {
@@ -877,11 +865,6 @@ func tokensToRegExp(rawTokens []interface{}, tokens *[]Token, options *Options) 
 				route += "(?:" + prefix + suffix + ")" + token.Modifier
 			}
 		}
-	}
-
-	if tokens != nil {
-		hdr := (*reflect.SliceHeader)(unsafe.Pointer(tokens))
-		*hdr = *(*reflect.SliceHeader)(unsafe.Pointer(&newTokens))
 	}
 
 	if end {
