@@ -51,7 +51,7 @@ import pathToRegexp "github.com/soongo/path-to-regexp"
     - **Modifier** The modifier character used for the segment (e.g. `?`)
 - **options**
   - **Sensitive** When `true` the regexp will be case sensitive. (default: `false`)
-  - **Strict** When `true` the regexp allows an optional trailing delimiter to match. (default: `false`)
+  - **Strict** When `true` the regexp won't allow an optional trailing delimiter to match. (default: `false`)
   - **End** When `true` the regexp will match to the end of the string. (default: `true`)
   - **Start** When `true` the regexp will match from the beginning of the string. (default: `true`)
   - **Validate** When `false` the function can produce an invalid (unmatched) path. (default: `true`)

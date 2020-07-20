@@ -39,7 +39,7 @@ type Options struct {
 	// When true the regexp will be case sensitive. (default: false)
 	Sensitive bool
 
-	// When true the regexp allows an optional trailing delimiter to match. (default: false)
+	// When true the regexp won't allow an optional trailing delimiter to match. (default: false)
 	Strict bool
 
 	// When true the regexp will match to the end of the string. (default: true)
