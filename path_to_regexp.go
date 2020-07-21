@@ -666,16 +666,6 @@ func anyString(str ...string) string {
 	return ""
 }
 
-// Returns the index of str in string slice
-func stringIndexOf(arr []string, str string) int {
-	for i, v := range arr {
-		if v == str {
-			return i
-		}
-	}
-	return -1
-}
-
 // Transform data which is reflect.Slice, reflect.Array to slice
 func toSlice(data interface{}) []interface{} {
 	v := reflect.ValueOf(data)
